@@ -1,6 +1,5 @@
 import {Poppins, Roboto} from "next/font/google";
 import {Button} from "@/components/ui/button";
-import {createRoom} from "@/actions/room";
 import {auth, signOut} from "@/auth";
 import {ImTv} from "react-icons/im";
 import {cn} from "@/lib/utils";
@@ -59,7 +58,7 @@ const HomePage = async () => {
                   />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56 bg-neutral-900 text-zinc-300 border-px mr-6 mt-2 md:m-0">
-                  <DropdownMenuItem onClick={createRoom}>
+                  <DropdownMenuItem>
                     <CiStreamOn />
                     <span>Go Live</span>
                   </DropdownMenuItem>
@@ -117,7 +116,6 @@ const HomePage = async () => {
 
           <div className="flex gap-2 items-center justify-center">
             <Button
-              onClick={createRoom}
               type="submit"
               className="motion-preset-focus-lg w-[140px] motion-duration-2000 group-hover text-neutral-950 bg-lime-500 
               rounded-lg px-4 py-2 hover:cursor-pointer shadow-lg hover:bg-lime-500 hover:shadow-none shadow-lime-400/30 

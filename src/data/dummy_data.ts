@@ -1044,7 +1044,7 @@ export const cityClues: CityClue[] = [
     ],
     fun_facts: [
       "Berlin has more museums than rainy days.",
-      "It’s estimated that Berlin has more Turkish inhabitants than any other city outside of Turkey.",
+      "It's estimated that Berlin has more Turkish inhabitants than any other city outside of Turkey.",
     ],
     trivia: [
       "Döner kebab was invented in Berlin.",
@@ -1094,7 +1094,7 @@ export const cityClues: CityClue[] = [
       "Home to Alcatraz Island.",
     ],
     fun_facts: [
-      "Fog has a name here – Karl the Fog.",
+      "Fog has a name here - Karl the Fog.",
       "Cable cars are a unique mode of transport and a National Historic Landmark.",
     ],
     trivia: [

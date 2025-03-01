@@ -16,7 +16,7 @@ export const login = async (values: z.infer<typeof loginSchema>) => {
   const {email, password} = validatedFields.data;
 
   const existingUser = await getUserByEmail(email);
-  if (!existingUser || !existingUser.email || !existingUser.password) {
+  if (!existingUser || !existingUser.email) {
     return {error: "Email doesn't exist"};
   }
 
