@@ -541,11 +541,12 @@ export async function skipMultiplayerQuestion(
   };
 }
 
+
 // Calculate a player's rank in a multiplayer game
 export async function getUserRank(
   gameId: string,
   userId: string
-): Promise<{rank: number; totalPlayers: number} | null> {
+): Promise<{ rank: number; totalPlayers: number } | null> {
   const game = await getMultiplayerGame(gameId);
 
   if (!game || !game.players.includes(userId)) {

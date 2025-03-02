@@ -2,7 +2,7 @@ import {redis} from "@/lib/redis";
 import {GameSession, GameQuestion} from "../types/game";
 import {cityClues, DummyOptions, CityClue} from "@/data/dummy_data";
 
-const SESSION_TTL = 3600; // 30 minutes in seconds
+const SESSION_TTL = 900; // 15 min
 const QUESTIONS_PER_GAME = 15;
 
 // Helper to shuffle an array
@@ -41,7 +41,7 @@ export async function createGameSession(userId: string): Promise<GameSession> {
 
   // Select 15 random questions from the dummy data
   const totalQuestions = cityClues.length;
-  const questionIds = Array.from({length: totalQuestions}, (_, i) => i + 1); // IDs 1 to N
+  const questionIds = Array.from({length: totalQuestions}, (_, i) => i + 1);
   const selectedIds = shuffleArray(questionIds).slice(0, QUESTIONS_PER_GAME);
 
   // Create question array for the game session
@@ -234,9 +234,9 @@ export async function submitAnswer(
   // Move to the next question
   const hasNextQuestion =
     session.currentQuestionIndex < session.questions.length - 1;
-  if (hasNextQuestion) {
-    session.currentQuestionIndex += 1;
-  }
+  // if (hasNextQuestion) {
+  //   session.currentQuestionIndex += 1;
+  // }
 
   // Store updated session
   const sessionKey = `game:session:${userId}`;
