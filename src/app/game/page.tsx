@@ -63,7 +63,7 @@ const INITIAL_GAME_STATE: GameState = {
   revealedClues: 1,
   streakCount: 0,
   showFunFacts: false,
-  timeRemaining: 1800,
+  timeRemaining: 900,
 };
 
 const CLUE_REVEAL_INTERVAL = 8000;
@@ -389,7 +389,7 @@ export default function Game() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {!gameState.active ? (
           // When Game is not running - Compleyed state or Game Menu Page
-          <div className="text-center bg-white rounded-lg shadow-lg p-8 transition-all h-full w-full flex items-center justify-center mt-20 md:mt-40 flex-col">
+          <div className="text-center bg-white rounded-lg shadow-lg p-8 transition-all h-full w-5/6 flex items-center justify-center mt-20 md:mt-24 flex-col">
             {!gameState.gameCompleted ? (
               // Menu page State
               <>
@@ -432,7 +432,7 @@ export default function Game() {
                     disabled={gameState.loading}
                     className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 w-[250px] rounded-md transition-colors duration-300 shadow-md hover:shadow-lg"
                   >
-                    {gameState.loading ? "Creating..." : "New Multiplayer Game"}
+                    {gameState.loading ? "Starting..." : "New Multiplayer Game"}
                   </button>
                 </div>
               </>
