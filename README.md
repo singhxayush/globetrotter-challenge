@@ -134,17 +134,27 @@ UPSTASH_REDIS_REST_TOKEN=
 Run the PostgreSQL migration to set up the database schema:
 
 ```bash
-$ npx prisma migrate dev
+npx prisma migrate dev
+```
+
+Prisma generation step
+
+```bash
+npx prisma generate
+```
+
+Push the schema to Database
+
+```bash
+npx prisma db push
 ```
 
 ### 5. Run the Development Server
 
 ```bash
-$ npm run dev
+npm run dev
 ```
 
 Access the app at: [http://localhost:3000](http://localhost:3000) or whatever path has been provided. Default is 3000.
 
 ---
-
-Happy globetrotting! 🌍
