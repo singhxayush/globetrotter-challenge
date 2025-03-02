@@ -1,12 +1,10 @@
 import {Poppins, Roboto} from "next/font/google";
 import {Button} from "@/components/ui/button";
 import {auth, signOut} from "@/auth";
-import {ImTv} from "react-icons/im";
 import {cn} from "@/lib/utils";
 import Image from "next/image";
-import {CiStreamOn} from "react-icons/ci";
-
-import {LogIn, LifeBuoy, LogOut} from "lucide-react";
+import {LogIn, LogOut} from "lucide-react";
+import {FaMapMarkedAlt} from "react-icons/fa";
 
 import {
   DropdownMenu,
@@ -36,14 +34,14 @@ const HomePage = async () => {
 
   return (
     <>
-      <main className="flex h-[100dvh] flex-col items-center justify-start section1 p-2 scroll-smooth">
+      <main className="flex h-[100dvh] flex-col items-center justify-start section1 p-2 scroll-smooth overflow-hidden">
         <nav
           className="sticky top-2 left-0 right-0 z-50 w-full sm:w-[70%] md:w-[60%] mx-2 flex justify-between 
           items-center bg-zinc-900/20 px-4 py-2 rounded-lg backdrop-blur-md backdrop-brightness-70 border-[1px] border-neutral-200/5
           motion-translate-y-in-[-200%] motion-ease motion-duration-500"
         >
           <h1 className={cn("text-white/90 text-xl", fontNav.className)}>
-            Instant Stream
+            Globetrotter
           </h1>
           <div>
             {session ? (
@@ -58,18 +56,6 @@ const HomePage = async () => {
                   />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56 bg-neutral-900 text-zinc-300 border-px mr-6 mt-2 md:m-0">
-                  <DropdownMenuItem>
-                    <CiStreamOn />
-                    <span>Go Live</span>
-                  </DropdownMenuItem>
-
-                  <a href="room">
-                    <DropdownMenuItem>
-                      <LifeBuoy />
-                      <span>Enter Other&apos;s room</span>
-                    </DropdownMenuItem>
-                  </a>
-
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut />
                     <span>Log out</span>
@@ -93,40 +79,38 @@ const HomePage = async () => {
         <div className="space-y-6 text-center group mt-[35%] sm:mt-[30%] md:mt-[12%]">
           <div
             className={cn(
-              "flex items-center flex-wrap gap-2 justify-center w-full text-7xl font-semibold text-white drop-shadow-md cursor-default motion-scale-in-[0.5] motion-translate-y-in-[-2000%] motion-duration-2000",
+              "flex items-center flex-wrap gap-2 justify-center w-full md:text-7xl text-5xl font-semibold text-white drop-shadow-md cursor-default motion-scale-in-[0.5] motion-translate-y-in-[-2000%] motion-duration-2000",
               font.className
             )}
           >
-            <h1 className="header_bg">Instant</h1>
-            <ImTv className="w-16 h-16 sm:w-20 sm:h-20 stroke-[] rotate-[7deg] -translate-y-1 sm:-translate-y-2 mx-1 ml-2 transition-all text-lime-200" />
-            <h1 className="header_bg">Stream</h1>
+            <h1 className="header_bg pb-3">Globetrotter</h1>
+            <FaMapMarkedAlt className="w-16 h-16 sm:w-24 sm:h-24 stroke-[] rotate-[7deg] -translate-y-1 sm:-translate-y-2 mx-1 ml-2 transition-all text-lime-200" />
+            <h1 className="header_bg pb-3">Challenge</h1>
           </div>
 
           <div>
             <p className="text-white text-sm font-sans font-light">
-              Live Stream instanly! A &quot;one-to-many&quot; streaming platform
+              Guess the World, One Clue at a Time! An interactive travel
+              guessing game where users
               <br />
-              delivering real-time broadcasts and live chat experience!
+              solve cryptic clues, unlock fun facts, and challenge friends to
+              beat their scores! 🌍
             </p>
             <p className="text-white text-sm mt-4">BUILT USING</p>
             <p className="text-md font-sans font-semibold bg-gradient-to-r from-sky-400 to-pink-300 bg-clip-text text-transparent">
-              [Next.js • MediaSoup • WebRTC • Redis Pub/Sub]
+              [Next.js • AuthJs • Redis • PSQL]
             </p>
           </div>
 
           <div className="flex gap-2 items-center justify-center">
-            <Button
-              type="submit"
-              className="motion-preset-focus-lg w-[140px] motion-duration-2000 group-hover text-neutral-950 bg-lime-500 
+            <Link href={"/game"}>
+              <Button
+                type="submit"
+                className="motion-preset-focus-lg w-[180px] h-[50px] motion-duration-2000 group-hover text-neutral-950 bg-lime-500 
               rounded-lg px-4 py-2 hover:cursor-pointer shadow-lg hover:bg-lime-500 hover:shadow-none shadow-lime-400/30 
-              active:shadow-none active:bg-lime-700 transition-all active:scale-[0.99]"
-            >
-              Create New Room
-            </Button>
-
-            <Link href="room">
-              <Button className="border-white/10 w-[140px] border-[1pt] motion-preset-seesaw-md motion-preset-fade-lg motion-duration-2000">
-                Join Room
+              active:shadow-none active:bg-lime-700 transition-all active:scale-[0.99] text-xl font-bold md:mt-10"
+              >
+                Play
               </Button>
             </Link>
           </div>
