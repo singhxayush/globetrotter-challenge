@@ -6,6 +6,8 @@ import confetti from "canvas-confetti";
 import {motion, AnimatePresence} from "framer-motion";
 import axios from "axios";
 import {redirect, useRouter} from "next/navigation";
+import {ImSpinner3} from "react-icons/im";
+import {ScanSearch, Timer, Users, Zap} from "lucide-react";
 
 // Types
 interface QuestionData {
@@ -352,34 +354,35 @@ export default function Game() {
   };
 
   // Create a new function to handle multiplayer game creation
-  const startMultiplayerGame = async () => {
-    setGameState((prev) => ({...prev, loading: true}));
-    try {
-      // Call the API to create a new multiplayer session
-      const response = await axios.post("/api/multiplayer/create");
-      const {sessionId} = response.data;
+  // const startMultiplayerGame = async () => {
+  //   setGameState((prev) => ({...prev, loading: true}));
+  //   try {
+  //     // Call the API to create a new multiplayer session
+  //     const response = await axios.post("/api/multiplayer/create");
+  //     const {sessionId} = response.data;
 
-      // Redirect to the waiting room with the session ID
-      router.push(`/game/multiplayer/${sessionId}`);
-    } catch (error) {
-      console.error("Error creating multiplayer game:", error);
-      setGameState((prev) => ({
-        ...prev,
-        loading: false,
-        feedback: {
-          message: "Error creating multiplayer game. Please try again.",
-          isCorrect: null,
-          correctAnswer: null,
-        },
-      }));
-    }
-  };
+  //     // Redirect to the waiting room with the session ID
+  //     router.push(`/game/multiplayer/${sessionId}`);
+  //   } catch (error) {
+  //     console.error("Error creating multiplayer game:", error);
+  //     setGameState((prev) => ({
+  //       ...prev,
+  //       loading: false,
+  //       feedback: {
+  //         message: "Error creating multiplayer game. Please try again.",
+  //         isCorrect: null,
+  //         correctAnswer: null,
+  //       },
+  //     }));
+  //   }
+  // };
 
   // Render loading screen if no question loaded yet
   if (gameState.loading && !gameState.questionData) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <span>Loading </span>
+        <ImSpinner3 className="animate-spin text-white w-8 h-8 duration-1000" />
       </div>
     );
   }
@@ -389,7 +392,7 @@ export default function Game() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {!gameState.active ? (
           // When Game is not running - Compleyed state or Game Menu Page
-          <div className="text-center bg-white rounded-lg shadow-lg p-8 transition-all h-full w-5/6 flex items-center justify-center mt-20 md:mt-24 flex-col">
+          <div className="text-center bg-white/90 rounded-lg shadow-lg p-8 transition-all h-full flex items-center justify-center mt-20 md:mt-24 flex-col">
             {!gameState.gameCompleted ? (
               // Menu page State
               <>
@@ -402,20 +405,20 @@ export default function Game() {
                 </p>
                 <div className="mb-8 grid grid-cols-2 gap-4 text-center">
                   <div className="bg-blue-50 p-4 md:h-[120px] md:w-[200px] flex flex-col items-center justify-center rounded-lg">
-                    <p className="text-xl font-bold text-blue-600">⏱️</p>
+                    <Timer className="w-10 h-10 mb-2" />
                     <p className="text-sm text-gray-700">30 minute challenge</p>
                   </div>
                   <div className="bg-blue-50 p-4 md:h-[120px] md:w-[200px] flex flex-col items-center justify-center rounded-lg">
-                    <p className="text-xl font-bold text-blue-600">🔍</p>
+                    <ScanSearch className="w-10 h-10 mb-2" />
                     <p className="text-sm text-gray-700">Solve clues</p>
                   </div>
                   <div className="bg-blue-50 p-4 md:h-[120px] md:w-[200px] flex flex-col items-center justify-center rounded-lg">
-                    <p className="text-xl font-bold text-blue-600">🏆</p>
+                    <Zap className="w-10 h-10 mb-2" />
                     <p className="text-sm text-gray-700">Build your streak</p>
                   </div>
 
                   <div className="bg-blue-50 p-4 md:h-[120px] md:w-[200px] flex flex-col items-center justify-center rounded-lg">
-                    <p className="text-xl font-bold text-blue-600">👥</p>
+                    <Users className="w-10 h-10 mb-2" />
                     <p className="text-sm text-gray-700">Multiplayer mode</p>
                   </div>
                 </div>
@@ -428,9 +431,10 @@ export default function Game() {
                     {gameState.loading ? "Starting..." : "Start New Game"}
                   </button>
                   <button
-                    onClick={startMultiplayerGame}
-                    disabled={gameState.loading}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 w-[250px] rounded-md transition-colors duration-300 shadow-md hover:shadow-lg"
+                    // onClick={startMultiplayerGame}
+                    // disabled={gameState.loading}
+                    disabled={true}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 w-[250px] hover:cursor-not-allowed rounded-md transition-colors duration-300 shadow-md hover:shadow-lg"
                   >
                     {gameState.loading ? "Starting..." : "New Multiplayer Game"}
                   </button>
