@@ -34,7 +34,10 @@ const HomePage = async () => {
 
   return (
     <>
-      <main className="flex h-[100dvh] flex-col items-center justify-start section1 p-2 scroll-smooth overflow-hidden">
+      <main
+        className="flex h-full flex-col items-center justify-start bg-[#F8F8FF] scroll-smooth overflow-hidden"
+      >
+        {/* <div className="radial-dot-background w-full fixed h-screen"></div> */}
         <nav
           className="sticky top-2 left-0 right-0 z-50 w-full sm:w-[70%] md:w-[60%] mx-2 flex justify-between 
           items-center bg-zinc-900/20 px-4 py-2 rounded-lg backdrop-blur-md backdrop-brightness-70 border-[1px] border-neutral-200/5
@@ -75,17 +78,16 @@ const HomePage = async () => {
             )}
           </div>
         </nav>
-
         <div className="space-y-6 text-center group mt-[35%] sm:mt-[30%] md:mt-[12%]">
           <div
             className={cn(
-              "flex items-center flex-wrap gap-2 justify-center w-full md:text-7xl text-5xl font-semibold text-white drop-shadow-md cursor-default motion-scale-in-[0.5] motion-translate-y-in-[-2000%] motion-duration-2000",
+              "flex items-center flex-wrap gap-2 justify-center w-full sm:text-7xl text-5xl font-semibold text-white drop-shadow-md cursor-default motion-scale-in-[0.5] motion-translate-y-in-[-2000%] motion-duration-2000",
               font.className
             )}
           >
-            <h1 className="header_bg pb-3">Globetrotter</h1>
+            <h1 className="header_bg pb-3">Globetrotter </h1>
             <FaMapMarkedAlt className="w-16 h-16 sm:w-24 sm:h-24 stroke-[] rotate-[7deg] -translate-y-1 sm:-translate-y-2 mx-1 ml-2 transition-all text-lime-200" />
-            <h1 className="header_bg pb-3">Challenge</h1>
+            {/* <h1 className="header_bg pb-3">Challenge</h1> */}
           </div>
 
           <div>

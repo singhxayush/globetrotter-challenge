@@ -5,17 +5,24 @@ import {useState, useEffect} from "react";
 import {motion, AnimatePresence} from "framer-motion";
 import axios from "axios";
 import {redirect} from "next/navigation";
-import {ImSpinner3} from "react-icons/im";
-import {Button} from "@/components/ui/button";
+import {ImSpinner5} from "react-icons/im";
 import GameMenu from "@/components/game/GameMenu";
 import ResultCard from "@/components/game/ResultCard";
-import {HiOutlineCursorClick} from "react-icons/hi";
-import {FaHourglassEnd} from "react-icons/fa";
-import {VscDebugRestart} from "react-icons/vsc";
 import {
   bigScreenConfetti,
   smallScreenConfetti,
 } from "@/components/game/Confetti";
+import {
+  BrainCircuit,
+  Flame,
+  Hourglass,
+  ListOrdered,
+  PartyPopper,
+  Search,
+  X,
+} from "lucide-react";
+import {cn} from "@/lib/utils";
+import SubmitOrRestart from "@/components/game/SubmitOrRestart";
 
 // Types
 interface QuestionData {
@@ -51,7 +58,6 @@ export interface GameState {
   loading: boolean;
   gameCompleted: boolean;
   revealedClues: number;
-  streakCount: number;
   showFunFacts: boolean;
   timeRemaining: number;
 }
@@ -71,7 +77,6 @@ const INITIAL_GAME_STATE: GameState = {
   loading: false,
   gameCompleted: false,
   revealedClues: 1,
-  streakCount: 0,
   showFunFacts: false,
   timeRemaining: 900,
 };
@@ -255,7 +260,6 @@ export default function Game() {
         questionData: data.questionData,
         progress: data.progress,
         stats: data.gameStats,
-        streakCount: data.streakCount || prev.streakCount || 0,
         selectedOption: null,
         loading: false,
         revealedClues: 1,
@@ -388,9 +392,9 @@ export default function Game() {
   // Render loading screen if no question loaded yet
   if (gameState.loading && !gameState.questionData) {
     return (
-      <div className="flex justify-center items-center h-[100dvh] w-full gap-2">
-        <span className="text-white">Loading..</span>
-        <ImSpinner3 className="animate-spin text-white w-4 h-4 duration-1000" />
+      <div className="flex justify-center items-center h-full w-full gap-2 animate-pulse">
+        <span className="text-white text-xl">Loading</span>
+        <ImSpinner5 className="animate-spin text-white w-5 h-5 duration-1000" />
       </div>
     );
   }
@@ -398,91 +402,66 @@ export default function Game() {
   return (
     <div className="flex items-center justify-center h-full w-full flex-col gap-4 bg-zinc-950">
       {!gameState.active ? (
-        // When Game is not running - Completed state or Game Menu Page
-        <div className="text-center w-5/4 md:mx-2 bg-white/90 rounded-sm shadow-lg md:p-4 transition-all h-[100dvh] w-full md:w-auto md:h-full flex items-center justify-center flex-col">
+        // When Game is not running - Completed state: Game Menu | Result {todo} change the order
+        <div className="text-center w-5/4 md:mx-2 bg-white/90 rounded-sm shadow-lg md:p-4 transition-all h-full w-full flex items-center justify-center flex-col">
           {!gameState.gameCompleted ? (
-            // Menu page State
+            // GAME MENU
             <GameMenu startGame={startGame} gameState={gameState} />
           ) : (
-            // Completed State - SHOW RESULT
+            // RESULT
             <ResultCard gameState={gameState} startGame={startGame} />
           )}
         </div>
       ) : (
+        // GAME ACTIVE - CLUE QUIZ | IMAGE GEO GUESS - BOTH SINGLE + MULTIPLAYER
         <div className="transition-all w-full h-full flex flex-col">
-          {gameState.questionData ? (
-            // When the Game is in running state
-            <div className="w-full h-full bg-white md:rounded-md rounded-none">
-              <div className="w-full h-full flex md:flex-col flex-col">
-                <GameHeader
-                  progress={gameState.progress}
-                  streakCount={gameState.streakCount}
-                  stats={gameState.stats}
-                  timeRemaining={gameState.timeRemaining}
-                  formatTime={formatTimeRemaining}
-                  startGame={startGame}
-                  handleEndGame={handleEndGame}
+          <div className="w-full h-auto md:h-full bg-white md:rounded-md rounded-none">
+            <div className="w-full h-full flex md:flex-col flex-col">
+              <GameHeader
+                progress={gameState.progress}
+                stats={gameState.stats}
+                timeRemaining={gameState.timeRemaining}
+                formatTime={formatTimeRemaining}
+                startGame={startGame}
+                handleEndGame={handleEndGame}
+              />
+
+              <TimerBar
+                timeRemaining={gameState.timeRemaining}
+                totalTime={900}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-0 h-full">
+                <CluesPanel
+                  questionData={gameState.questionData}
+                  revealedClues={gameState.revealedClues}
+                  showFunFacts={gameState.showFunFacts}
                 />
 
-                <TimerBar
-                  timeRemaining={gameState.timeRemaining}
-                  totalTime={900}
+                <OptionsPanel
+                  questionData={gameState.questionData}
+                  selectedOption={gameState.selectedOption}
+                  setSelectedOption={(option) =>
+                    setGameState((prev) => ({
+                      ...prev,
+                      selectedOption: option,
+                    }))
+                  }
+                  feedback={gameState.feedback}
+                  loading={gameState.loading}
+                  handleSubmitAnswer={handleSubmitAnswer}
+                  skipQuestion={skipQuestion}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-                  <CluesPanel
-                    questionData={gameState.questionData}
-                    revealedClues={gameState.revealedClues}
-                    showFunFacts={gameState.showFunFacts}
-                  />
-
-                  <OptionsPanel
-                    questionData={gameState.questionData}
-                    selectedOption={gameState.selectedOption}
-                    setSelectedOption={(option) =>
-                      setGameState((prev) => ({
-                        ...prev,
-                        selectedOption: option,
-                      }))
-                    }
-                    feedback={gameState.feedback}
-                    loading={gameState.loading}
-                    handleSubmitAnswer={handleSubmitAnswer}
-                    skipQuestion={skipQuestion}
+                <div className="block md:hidden">
+                  <SubmitOrRestart
+                    startGame={startGame}
+                    handleEndGame={handleEndGame}
                   />
                 </div>
               </div>
-
-              <div className="md:hidden flex p-10 w-full items-center justify-evenly space-x-2">
-                <Button
-                  onClick={startGame}
-                  className="w-20 h-8 text-xs bg-sky-500 shadow-md shadow-black/20 hover:bg-sky-700 hover:shadow-none"
-                >
-                  Restart
-                  <VscDebugRestart />
-                </Button>
-                <Button
-                  onClick={handleEndGame}
-                  className="w-20 h-8 text-xs bg-red-500 shadow-md shadow-black/20 hover:bg-red-700 hover:shadow-none"
-                >
-                  Submit
-                  <HiOutlineCursorClick className="h-10 w-10" />
-                </Button>
-              </div>
             </div>
-          ) : (
-            // Bad ass
-            <div className="text-center">
-              <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto mb-6"></div>
-                <div className="h-10 bg-gray-200 rounded w-1/2 mx-auto mb-6"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2.5"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2.5"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2.5"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       )}
     </div>
@@ -517,7 +496,6 @@ function TimerBar({
 
 type GameHeaderProps = {
   progress: GameProgress | null;
-  streakCount: number;
   stats: GameStats | null;
   timeRemaining: number;
   formatTime: (seconds: number) => string;
@@ -528,7 +506,6 @@ type GameHeaderProps = {
 // Header Component
 function GameHeader({
   progress,
-  streakCount,
   stats,
   timeRemaining,
   formatTime,
@@ -542,41 +519,32 @@ function GameHeader({
           <span className="text-sm text-gray-500">
             Question {progress?.current} of {progress?.total}
           </span>
-          {streakCount > 2 && (
-            <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 rounded-full">
-              🔥 {streakCount} streak
-            </span>
-          )}
         </div>
 
-        <span className="border-b md:border-b-0 md:border-r border-gray-300" />
+        <span className="border-b md:border-b-0 md:border-r border-gray-300 hidden md:block" />
 
         <div className="flex items-center space-x-4">
           <span className="text-sm font-medium bg-blue-50 text-blue-700 px-2 rounded-md">
             Score: {stats ? Math.round(stats.score * 100) : 0}%
           </span>
-          <span className="border-b h-full md:border-b-0 md:border-r border-gray-300"></span>
+          <span className="border-b h-full md:border-b-0 md:border-r border-gray-300 hidden md:block"></span>
           <span className="text-sm flex items-center gap-1 text-gray-500">
-            <FaHourglassEnd /> {formatTime(timeRemaining)}
+            <Hourglass
+              className={cn(
+                "w-5 h-5 motion-preset-seesaw-sm text-green-500",
+                timeRemaining < 60 &&
+                  "text-red-500 motion-preset-seesaw-md rounded-sm",
+                timeRemaining < 300 &&
+                  "text-orange-500 motion-preset-seesaw-md rounded-sm"
+              )}
+            />
+            {formatTime(timeRemaining)}
           </span>
         </div>
       </div>
 
-      <div className="md:flex hidden items-center justify-center space-x-2">
-        <Button
-          onClick={startGame}
-          className="w-20 h-8 text-xs bg-sky-500 shadow-md shadow-black/20 hover:bg-sky-700 hover:shadow-none"
-        >
-          Restart
-          <VscDebugRestart />
-        </Button>
-        <Button
-          onClick={handleEndGame}
-          className="w-20 h-8 text-xs bg-red-500 shadow-md shadow-black/20 hover:bg-red-700 hover:shadow-none"
-        >
-          Submit
-          <HiOutlineCursorClick className="h-10 w-10" />
-        </Button>
+      <div className="hidden md:block">
+        <SubmitOrRestart startGame={startGame} handleEndGame={handleEndGame} />
       </div>
     </div>
   );
@@ -588,7 +556,7 @@ function CluesPanel({
   revealedClues,
   showFunFacts,
 }: {
-  questionData: QuestionData;
+  questionData: QuestionData | null;
   revealedClues: number;
   showFunFacts: boolean;
 }) {
@@ -596,9 +564,12 @@ function CluesPanel({
     <div className="p-6 border-r border-gray-200 min-h-[20dvh]">
       {!showFunFacts && (
         <>
-          <h2 className="text-xl font-semibold mb-4">Clues:</h2>
+          <div className="flex gap-2 items-center mb-4">
+            <BrainCircuit />
+            <h2 className="text-xl font-semibold">Clues:</h2>
+          </div>
           <ul className="space-y-3 mb-6">
-            {questionData.clues.slice(0, revealedClues).map((clue, index) => (
+            {questionData?.clues.slice(0, revealedClues).map((clue, index) => (
               <motion.li
                 key={index}
                 initial={{opacity: 0, x: -10}}
@@ -606,11 +577,13 @@ function CluesPanel({
                 transition={{delay: index * 0.2}}
                 className="flex items-start p-3 bg-blue-50 rounded-md"
               >
-                <span className="text-blue-500 mr-2">🔍</span>
+                <span className="text-blue-500 mr-2">
+                  <Search />
+                </span>
                 <span className="text-gray-700">{clue}</span>
               </motion.li>
             ))}
-            {revealedClues < questionData.clues.length && (
+            {questionData && revealedClues < questionData.clues.length && (
               <li className="text-sm text-gray-500 italic p-2">
                 More clues will be revealed soon...
               </li>
@@ -628,9 +601,12 @@ function CluesPanel({
             exit={{opacity: 0, height: 0}}
             transition={{duration: 0.3}}
           >
-            <h3 className="text-lg font-semibold  mb-2">Fun Facts:</h3>
+            <div className="flex gap-2">
+              <Flame />
+              <h3 className="text-lg font-semibold  mb-2">Fun Facts:</h3>
+            </div>
             <div className="space-y-3">
-              {questionData.funFacts.map((fact, index) => (
+              {questionData?.funFacts.map((fact, index) => (
                 <div
                   key={index}
                   className="p-3 bg-purple-50 rounded-md text-gray-700 border-l-4 border-purple-300"
@@ -656,7 +632,7 @@ function OptionsPanel({
   handleSubmitAnswer,
   skipQuestion,
 }: {
-  questionData: QuestionData;
+  questionData: QuestionData | null;
   selectedOption: string | null;
   setSelectedOption: (option: string) => void;
   feedback: {
@@ -670,16 +646,19 @@ function OptionsPanel({
 }) {
   return (
     <div className="p-6">
-      <h3 className="text-lg font-semibold mb-2">Select the correct city:</h3>
+      <div className="flex gap-2 items-center mb-4">
+        <ListOrdered />
+        <h3 className="text-lg font-semibold">Select the correct city:</h3>
+      </div>
       <div className="grid grid-cols-1 gap-2 mb-4">
-        {questionData.options.map((option, index) => (
+        {questionData?.options.map((option, index) => (
           <button
             key={index}
             onClick={() => setSelectedOption(option)}
-            className={`md:p-4 p-2 text-center rounded-lg border-2 transition-all ${
+            className={`md:p-4 p-2 text-left rounded-lg border-2 transition-all ${
               selectedOption === option
-                ? "bg-blue-100 border-blue-500 shadow-md"
-                : "bg-white border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+                ? "bg-sky-100 border-sky-500 shadow-md"
+                : "bg-neutral-100 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
             } ${
               feedback.isCorrect !== null && feedback.correctAnswer === option
                 ? "bg-green-100 border-green-500"
@@ -687,6 +666,7 @@ function OptionsPanel({
             }`}
             disabled={loading || feedback.isCorrect !== null}
           >
+            {String.fromCharCode(65 + index) + ". "}
             {option}
           </button>
         ))}
@@ -708,9 +688,13 @@ function OptionsPanel({
           >
             <div className="flex items-center">
               {feedback.isCorrect ? (
-                <span className="mr-2">🎉</span>
+                <span className="mr-2">
+                  <PartyPopper />
+                </span>
               ) : feedback.isCorrect === false ? (
-                <span className="mr-2">❌</span>
+                <span className="mr-2">
+                  <X className="text-red-500 stroke-[4px]" />
+                </span>
               ) : (
                 <span className="mr-2">ℹ️</span>
               )}

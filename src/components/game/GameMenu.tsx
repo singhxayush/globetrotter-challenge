@@ -9,7 +9,7 @@ type GameMenuProps = {
 
 export default function GameMenu({startGame, gameState}: GameMenuProps) {
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center">
+    <div className="w-auto h-full flex flex-col items-center justify-center">
       <h2 className="text-2xl font-semibold mb-4">
         Welcome to the Globetrotter Challenge!
       </h2>

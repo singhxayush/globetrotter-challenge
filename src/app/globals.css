@@ -178,3 +178,12 @@ body {
     opacity: 0.01;
   }
 }
+
+@layer utilities {
+  .radial-dot-background {
+    background-image: radial-gradient(#000000 1px, transparent 1px);
+    background-size: 16px 16px;
+    background-position: center top;
+    opacity: 0.5;
+  }
+}

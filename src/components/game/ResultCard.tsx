@@ -1,6 +1,6 @@
-import { GameState } from "@/app/game/page";
-import { Button } from "../ui/button";
-import { CircleX } from "lucide-react";
+import {GameState} from "@/app/game/page";
+import {Button} from "../ui/button";
+import {CircleX} from "lucide-react";
 
 type ResultCardProps = {
   gameState: GameState;
@@ -8,9 +8,17 @@ type ResultCardProps = {
 };
 
 export default function ResultCard({gameState, startGame}: ResultCardProps) {
+  const handleEndGame = async () => {
+    // Full page refresh
+    window.location.href = "/game";
+  };
+
   return (
     <div className="h-full w-full flex flex-col bg-white py-10 items-center justify-center relative">
-      <CircleX className="absolute top-2 right-2 w-5 h-5 decoration-cyan-300" />
+      <CircleX
+        onClick={handleEndGame}
+        className="absolute top-2 right-2 w-6 h-6 cursor-pointer hover:text-destructive rounded-full hover:bg-red-500/10"
+      />
 
       <h2 className="text-2xl font-bold mb-4">Game Completed!</h2>
 
