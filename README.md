@@ -72,13 +72,11 @@ The **Globetrotter Challenge** is a full-stack web application designed to deliv
 
 ## 🚀 Tech Stack Choice
 
-- **Frontend:** Next.js
+- **Full Stack:** Next.js
   - SSR (Server-Side Rendering) for dynamic page generation.
+  - Pages and APIs routing with App routers
   - Seamless API integration.
   - Optimized for performance.
-- **Backend:** Node.js with Express
-  - Fast and minimal API design.
-  - Middleware flexibility.
 - **Database:** PostgreSQL
   - Relational database for structured user data.
   - Ensures data integrity.
@@ -119,10 +117,6 @@ AUTH_SECRET=
 # GITHUB OAuth secrets
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
-
-# GOOGLE OAuth secrets
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
 
 # Redis upstash
 UPSTASH_REDIS_REST_URL=
