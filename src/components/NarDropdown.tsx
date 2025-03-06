@@ -67,7 +67,7 @@ export function NavDropdown({handleSignOut, session}: NavDropdownPros) {
           </svg>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-[100dvw] sm:w-56 mt-5">
+      <DropdownMenuContent className="w-[100dvw] sm:w-56 mt-[18px] z-[2000] mr-2 rounded-none">
         <DropdownMenuLabel>{session?.user?.name}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>

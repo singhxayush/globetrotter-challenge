@@ -1,4 +1,4 @@
-import {Lato, Oswald, Roboto} from "next/font/google";
+import {Barlow, Lato, Roboto} from "next/font/google";
 import {Button} from "@/components/ui/button";
 import {auth, signOut} from "@/auth";
 import {cn} from "@/lib/utils";
@@ -6,10 +6,12 @@ import Image from "next/image";
 import {LogIn} from "lucide-react";
 import Link from "next/link";
 import {NavDropdown} from "@/components/NarDropdown";
+import HomepagePlayButton from "@/components/HomepagePlayButton";
 
-const Headerfont = Oswald({
-  subsets: ["cyrillic"],
-  weight: ["400"],
+const Headerfont = Barlow({
+  subsets: ["latin"],
+  weight: ["100", "300", "400", "700", "900"],
+  preload: true,
 });
 
 const fontRoboto = Roboto({
@@ -19,7 +21,7 @@ const fontRoboto = Roboto({
 
 const fontLato = Lato({
   subsets: ["latin"],
-  weight: ["100", "300"],
+  weight: ["100", "300", "400", "700", "900"],
 });
 
 const HomePage = async () => {
@@ -33,7 +35,7 @@ const HomePage = async () => {
   return (
     <main className="overflow-auto overflow-x-hidden">
       <nav
-        className="fixed top-0 left-0 right-0 z-50 w-full h-20 flex justify-between 
+        className="fixed top-0 left-0 right-0 z-[2000] w-full h-20 flex justify-between 
           items-center bg-white shadow-xl shadow-neutral-800/10 px-4 py-2
           motion-translate-y-in-[-200%] motion-ease motion-duration-500 border-b-[0.1pt] border-black/40"
       >
@@ -57,7 +59,7 @@ const HomePage = async () => {
         </div>
 
         {/* Right - DROPDOWN */}
-        <div className="mr-2">
+        <div className="mr-0 sm:mr-2">
           {session ? (
             <NavDropdown handleSignOut={handleSignOut} session={session} />
           ) : (
@@ -74,53 +76,45 @@ const HomePage = async () => {
         </div>
       </nav>
 
-      <section className="landing_section flex">
-        {/* <div className="w-full relative">
+      <section className="landing_section relative overflow-hidden">
+        <div className="absolute z-10">
+          <div className="w-[100dvw] h-[100dvh] flex flex-col mt-20 items-start sm:ml-10 pl-2 backdrop-blur-sm sm:backdrop-blur-0">
+            <h1
+              className={cn(
+                "text-[3.5rem] sm:text-[5rem] font-semibold bg-gradient-to-b from-zinc-600 to-zinc-700 text-transparent bg-clip-text motion-preset-focus-lg -motion-translate-y-in-25 motion-duration-[1s]",
+                Headerfont.className
+              )}
+            >
+              Globetrotter
+            </h1>
+
+            <p
+              className={cn(
+                "text-sm sm:text-lg ml-1 mb-10 text-start motion-preset-focus-lg motion-delay-[0.3s] -motion-translate-y-in-25 motion-duration-[1.2s]",
+                fontLato.className
+              )}
+              style={{fontWeight: "0.1pt"}}
+            >
+              Guess the World, One Clue at a Time!
+              <br />
+              An interactive travel guessing game where users solve cryptic
+              clues,
+              <br />
+              unlock fun facts, and challenge friends to beat their scores!
+            </p>
+
+            <HomepagePlayButton />
+          </div>
+        </div>
+
+        <div className="absolute -bottom-20 -right-36">
           <Image
             src="/landing.svg"
             alt="landing"
-            width={0}
-            height={0}
-            className="absolute left-0  mt-20 md:w-[60%] md:opacity-100 opacity-10"
+            width={1000}
+            height={1000}
+            className="scale-x-[-1.4] scale-y-[1.4] sm:scale-x-[-0.85] sm:scale-y-[0.85] pointer-events-none"
           />
-        </div> */}
-
-        <div className="absolute left-4 top-20 flex flex-col gap-10">
-          <h1
-            className={cn(
-              "header_bg font-bold text-[5rem] motion-preset-focus-lg -motion-translate-y-in-25 motion-duration-[1s]",
-              Headerfont.className
-            )}
-          >
-            Globetrotter
-          </h1>
-
-          <p
-            className={cn(
-              "text-md ml-2 motion-preset-focus-lg motion-delay-[0.3s] -motion-translate-y-in-25 motion-duration-[1.2s]",
-              fontLato.className
-            )}
-            style={{fontWeight: "0.1pt"}}
-          >
-            Guess the World, One Clue at a Time!
-            <br />
-            An interactive travel guessing game where users solve cryptic clues,
-            <br />
-            unlock fun facts, and challenge friends to beat their scores!
-          </p>
-
-          <Link href={"/game"}>
-            <Button
-              type="submit"
-              className="border-spacing-4 border-[1pt] border-neutral-700 
-                w-[180px] h-[50px] group-hover text-neutral-600 bg-transparent hover:bg-[#F8F8FF/10]
-                px-4 py-2 hover:cursor-pointer shadow-lg hover:bg-white-500 active:shadow-none 
-                shadow-white-400/30 active:bg-white-700 transition-all active:scale-[0.99] text-xl 
-                font-bold rounded-sm ml-2 motion-preset-focus-lg motion-delay-[0.6s] -motion-translate-y-in-25 motion-duration-[1.2s]"
-            >
-              Play
-            </Button>
-          </Link>
         </div>
       </section>
       <section className="landing_section"></section>
@@ -130,13 +124,3 @@ const HomePage = async () => {
 };
 
 export default HomePage;
-
-{
-  /* <Image
-                  src={session?.user?.image || "/profile.svg"}
-                  width={40}
-                  height={40}
-                  alt={session?.user?.name || "Profile"}
-                  className="rounded-full cursor-pointer bg-neutral-200"
-                /> */
-}
