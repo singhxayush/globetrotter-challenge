@@ -89,22 +89,16 @@ body {
 
 .header_bg {
   background: rgb(255, 255, 255);
-  background: linear-gradient(
-    180deg,
-    rgb(20, 21, 23) 50%,
-    rgb(58, 57, 57) 70%
-  );
+  background: linear-gradient(180deg, rgb(20, 21, 23) 50%, rgb(58, 57, 57) 70%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.section1 {
-  background: radial-gradient(ellipse at top, #373c61 10%, #000000 70%);
-}
-
-.section2 {
-  background: radial-gradient(ellipse at bottom, #131315 10%, #000000 70%);
+.landing_section {
+  background: #f8f8ff;
+  width: 100%;
+  height: 100dvh;
 }
 
 /* MOUSE SCROLL ANIMATION */
