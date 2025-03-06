@@ -1,10 +1,10 @@
-import {Poppins, Roboto} from "next/font/google";
+import {Lato, Oswald, Roboto} from "next/font/google";
 import {Button} from "@/components/ui/button";
 import {auth, signOut} from "@/auth";
 import {cn} from "@/lib/utils";
 import Image from "next/image";
 import {LogIn, LogOut} from "lucide-react";
-import {FaMapMarkedAlt} from "react-icons/fa";
+// import {FaMapMarkedAlt} from "react-icons/fa";
 
 import {
   DropdownMenu,
@@ -14,14 +14,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 
-const font = Poppins({
-  subsets: ["latin"],
-  weight: ["600"],
+// const font = Cherry_Bomb_One({
+//   subsets: ["latin"],
+//   weight: ["400"],
+// });
+
+const Headerfont = Oswald({
+  subsets: ["cyrillic"],
+  weight: ["400"],
 });
 
-const fontNav = Roboto({
+const fontRoboto = Roboto({
   subsets: ["cyrillic"],
-  weight: ["500"],
+  weight: ["500", "100", "300", "400"],
+});
+
+const fontLato = Lato({
+  subsets: ["latin"],
+  weight: ["100", "300"],
 });
 
 const HomePage = async () => {
@@ -33,20 +43,26 @@ const HomePage = async () => {
   }
 
   return (
-    <>
-      <main
-        className="flex h-full flex-col items-center justify-start bg-[#F8F8FF] scroll-smooth overflow-hidden"
-      >
+    <main className="overflow-auto overflow-x-hidden">
+      <section className="flex h-[100dvh] w-full bg-[#F8F8FF] scroll-smooth">
         {/* <div className="radial-dot-background w-full fixed h-screen"></div> */}
         <nav
-          className="sticky top-2 left-0 right-0 z-50 w-full sm:w-[70%] md:w-[60%] mx-2 flex justify-between 
-          items-center bg-zinc-900/20 px-4 py-2 rounded-lg backdrop-blur-md backdrop-brightness-70 border-[1px] border-neutral-200/5
+          className="fixed top-0 left-0 right-0 z-50 w-full h-20 flex justify-between 
+          items-center bg-[#1e1e1f] px-4 py-2
           motion-translate-y-in-[-200%] motion-ease motion-duration-500"
         >
-          <h1 className={cn("text-white/90 text-xl", fontNav.className)}>
-            Globetrotter
-          </h1>
-          <div>
+          <div className="flex items-center justify-center gap-2">
+            <Image src="/logo.svg" alt="Logo" width={50} height={50} />
+            <h1
+              className={cn(
+                "text-white/90 text-xl font-light",
+                fontRoboto.className
+              )}
+            >
+              Globetrotter
+            </h1>
+          </div>
+          <div className="mr-2">
             {session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -55,10 +71,10 @@ const HomePage = async () => {
                     width={50}
                     height={50}
                     alt={session?.user?.name || "Profile"}
-                    className="w-9 h-9 rounded-xl border-[2px] border-neutral-700 cursor-pointer"
+                    className="w-9 h-9 rounded-xl border-[2px] border-neutral-700 cursor-pointer bg-neutral-200"
                   />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-neutral-900 text-zinc-300 border-px mr-6 mt-2 md:m-0">
+                <DropdownMenuContent className="w-56 bg-neutral-900 text-zinc-300 border-px mr-6 mt-2">
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut />
                     <span>Log out</span>
@@ -68,9 +84,9 @@ const HomePage = async () => {
             ) : (
               <Link href="/auth/login">
                 <Button
-                  className="motion-preset-focus-lg motion-duration-2000 group-hover text-neutral-950 bg-lime-500 
-                rounded-lg px-4 py-2 hover:cursor-pointer shadow-lg hover:bg-lime-500 hover:shadow-none
-                active:shadow-none active:bg-lime-700 transition-all active:scale-[0.99]"
+                  className="motion-preset-focus-lg motion-duration-2000 group-hover text-neutral-950 bg-white-500 
+                rounded-lg px-4 py-2 hover:cursor-pointer shadow-lg hover:bg-white-500 hover:shadow-none
+                active:shadow-none active:bg-white-700 transition-all active:scale-[0.99]"
                 >
                   <LogIn />
                 </Button>
@@ -78,47 +94,59 @@ const HomePage = async () => {
             )}
           </div>
         </nav>
-        <div className="space-y-6 text-center group mt-[35%] sm:mt-[30%] md:mt-[12%]">
-          <div
-            className={cn(
-              "flex items-center flex-wrap gap-2 justify-center w-full sm:text-7xl text-5xl font-semibold text-white drop-shadow-md cursor-default motion-scale-in-[0.5] motion-translate-y-in-[-2000%] motion-duration-2000",
-              font.className
-            )}
-          >
-            <h1 className="header_bg pb-3">Globetrotter </h1>
-            <FaMapMarkedAlt className="w-16 h-16 sm:w-24 sm:h-24 stroke-[] rotate-[7deg] -translate-y-1 sm:-translate-y-2 mx-1 ml-2 transition-all text-lime-200" />
-            {/* <h1 className="header_bg pb-3">Challenge</h1> */}
-          </div>
 
-          <div>
-            <p className="text-white text-sm font-sans font-light">
-              Guess the World, One Clue at a Time! An interactive travel
-              guessing game where users
+        <div className="w-full flex items-center justify-end p-6 relative">
+          <Image
+            src="/landing.svg"
+            alt="landing"
+            width={900}
+            height={900}
+            className="mt-20 bg-yellow-300 shadow-lg shadow-black/10 border-[1pt] p-10 rounded-2xl"
+          />
+
+          <div className="absolute left-4 top-20 flex flex-col gap-10">
+            <h1
+              className={cn(
+                "header_bg font-bold text-[5rem] motion-preset-focus-lg -motion-translate-y-in-25 motion-duration-[1.5s]",
+                Headerfont.className
+              )}
+            >
+              Globetrotter
+            </h1>
+
+            <p
+              className={cn(
+                "text-md ml-2 motion-preset-focus-lg motion-delay-[0.5s] -motion-translate-y-in-25 motion-duration-[2s]",
+                fontLato.className
+              )}
+              style={{fontWeight: "0.1pt"}}
+            >
+              Guess the World, One Clue at a Time!
               <br />
-              solve cryptic clues, unlock fun facts, and challenge friends to
-              beat their scores! 🌍
+              An interactive travel guessing game where users solve cryptic
+              clues,
+              <br />
+              unlock fun facts, and challenge friends to beat their scores!
             </p>
-            <p className="text-white text-sm mt-4">BUILT USING</p>
-            <p className="text-md font-sans font-semibold bg-gradient-to-r from-sky-400 to-pink-300 bg-clip-text text-transparent">
-              [Next.js • AuthJs • Redis • PSQL]
-            </p>
-          </div>
 
-          <div className="flex gap-2 items-center justify-center">
             <Link href={"/game"}>
               <Button
                 type="submit"
-                className="motion-preset-focus-lg w-[180px] h-[50px] motion-duration-2000 group-hover text-neutral-950 bg-lime-500 
-              rounded-lg px-4 py-2 hover:cursor-pointer shadow-lg hover:bg-lime-500 hover:shadow-none shadow-lime-400/30 
-              active:shadow-none active:bg-lime-700 transition-all active:scale-[0.99] text-xl font-bold md:mt-10"
+                className="motion-preset-focus-lg border-spacing-4 border-[1pt] border-neutral-700 
+                w-[180px] h-[50px] motion-duration-2000 group-hover text-neutral-600 bg-transparent hover:bg-[#F8F8FF/10]
+                px-4 py-2 hover:cursor-pointer shadow-lg hover:bg-white-500 active:shadow-none 
+                shadow-white-400/30 active:bg-white-700 transition-all active:scale-[0.99] text-xl 
+                font-bold rounded-sm ml-2"
               >
                 Play
               </Button>
             </Link>
           </div>
         </div>
-      </main>
-    </>
+      </section>
+      <section className="w-full h-[100dvh] bg-[#F8F8FF]"></section>
+      <section className="w-full h-[100dvh] bg-[#F8F8FF]"></section>
+    </main>
   );
 };
 
