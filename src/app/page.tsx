@@ -50,7 +50,7 @@ const HomePage = async () => {
           />
           <h1
             className={cn(
-              "text-neutral-600 text-xl font-normal",
+              "text-neutral-600 text-xl font-normal sm:block hidden",
               fontRoboto.className
             )}
           >
@@ -77,11 +77,11 @@ const HomePage = async () => {
       </nav>
 
       <section className="landing_section relative overflow-hidden">
-        <div className="absolute z-10">
-          <div className="w-[100dvw] h-[100dvh] flex flex-col mt-20 items-start sm:ml-10 pl-2 backdrop-blur-sm sm:backdrop-blur-0">
+        <div className="absolute z-[1000]">
+          <div className="w-[100dvw] h-[100vh] bg-[#F8F8FF]/20 sm:bg-transparent flex flex-col mt-20 items-center sm:items-start sm:pl-10 pl-0 backdrop-blur-sm md:backdrop-blur-[2px] lg:backdrop-blur-0">
             <h1
               className={cn(
-                "text-[3.5rem] sm:text-[5rem] font-semibold bg-gradient-to-b from-zinc-600 to-zinc-700 text-transparent bg-clip-text motion-preset-focus-lg -motion-translate-y-in-25 motion-duration-[1s]",
+                "text-[3.5rem] text-left sm:text-center sm:text-[7rem] md:text-[8rem] font-semibold bg-gradient-to-b from-zinc-600 to-zinc-700 text-transparent bg-clip-text motion-preset-focus-lg -motion-translate-y-in-25 motion-duration-[1s] transition-all duration-500",
                 Headerfont.className
               )}
             >
@@ -90,12 +90,12 @@ const HomePage = async () => {
 
             <p
               className={cn(
-                "text-sm sm:text-lg ml-1 mb-10 text-start motion-preset-focus-lg motion-delay-[0.3s] -motion-translate-y-in-25 motion-duration-[1.2s]",
+                "text-[12px] sm:text-lg mx-2 sm:ml-2 text-center sm:text-start mb-10 motion-preset-focus-lg motion-delay-[0.3s] -motion-translate-y-in-25 motion-duration-[1.2s]",
                 fontLato.className
               )}
               style={{fontWeight: "0.1pt"}}
             >
-              Guess the World, One Clue at a Time!
+              <b>Guess the World, One Clue at a Time!</b>
               <br />
               An interactive travel guessing game where users solve cryptic
               clues,
@@ -107,15 +107,17 @@ const HomePage = async () => {
           </div>
         </div>
 
-        <div className="absolute -bottom-20 -right-36">
+        <div className="absolute bottom-0 right-0">
           <Image
-            src="/landing.svg"
+            src="/landing1.svg"
             alt="landing"
             width={1000}
             height={1000}
-            className="scale-x-[-1.4] scale-y-[1.4] sm:scale-x-[-0.85] sm:scale-y-[0.85] pointer-events-none"
+            className="pointer-events-none scale-[1.7] xs:scale-[1.4] sm:scale-[1.2] md:scale-[0.8] lg:scale-[0.8] origin-bottom-right translate-x-[7rem] sm:translate-x-0 transition-all duration-500"
           />
         </div>
+
+        <div className="section1_bottom_fade_bottom absolute bottom-0 left-0 w-full h-[30%]" />
       </section>
       <section className="landing_section"></section>
       <section className="landing_section"></section>

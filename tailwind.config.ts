@@ -11,6 +11,9 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        xs: "450px",
+      },
       keyframes: {
         "caret-blink": {
           "0%,70%,100%": {opacity: "1"},
