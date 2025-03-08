@@ -1,12 +1,9 @@
-// src/app/api/game/route.ts - API route for creating a new game session
+// src/app/api/game/route.ts - API route for game session
 import {NextResponse} from "next/server";
 import {createGameSession} from "@/actions/game";
 import {auth} from "@/auth";
 
-/**
- * This route starts a new game session
- * POST /api/game
- */
+// Start a new game session
 export async function POST() {
   // Verify user authentication
   const session = await auth();
@@ -29,7 +26,5 @@ export async function POST() {
     success: true,
     message: "Game session created successfully",
     totalQuestions: gameSession.questions.length,
-    startTime: gameSession.startTime,
   });
 }
-

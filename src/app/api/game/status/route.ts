@@ -3,10 +3,6 @@ import {NextResponse} from "next/server";
 import {getGameSession} from "@/actions/game";
 import {auth} from "@/auth";
 
-/**
- * This route return if any existing game session exists or not?
- * GET /api/game/status
- */
 export async function GET() {
   // Verify user authentication
   const session = await auth();
