@@ -27,7 +27,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {Button} from "./ui/button";
+import {Button} from "@/components/ui/button";
 import {Session} from "next-auth";
 
 type NavDropdownPros = {
