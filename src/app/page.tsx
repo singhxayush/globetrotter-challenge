@@ -5,8 +5,8 @@ import {cn} from "@/lib/utils";
 import Image from "next/image";
 import {LogIn} from "lucide-react";
 import Link from "next/link";
-import {NavDropdown} from "@/components/NarDropdown";
-import HomepagePlayButton from "@/components/HomepagePlayButton";
+import {NavDropdown} from "@/components/landing/NarDropdown";
+import HomepagePlayButton from "@/components/landing/HomepagePlayButton";
 
 const Headerfont = Barlow({
   subsets: ["latin"],
@@ -109,7 +109,7 @@ const HomePage = async () => {
 
         <div className="absolute bottom-0 right-0">
           <Image
-            src="/landing1.svg"
+            src="/landing.svg"
             alt="landing"
             width={1000}
             height={1000}
