@@ -78,10 +78,10 @@ const HomePage = async () => {
 
       <section className="landing_section relative overflow-hidden">
         <div className="absolute z-[1000]">
-          <div className="w-[100dvw] h-[100vh] bg-[#F8F8FF]/20 sm:bg-transparent flex flex-col mt-20 items-center sm:items-start sm:pl-10 pl-0 backdrop-blur-sm md:backdrop-blur-[2px] lg:backdrop-blur-0">
+          <div className="w-[100dvw] h-[100vh] bg-[#F8F8FF]/20 lg:bg-transparent flex flex-col mt-20 items-center sm:items-start sm:pl-10 pl-0 backdrop-blur-sm md:backdrop-blur-[2px] lg:backdrop-blur-0">
             <h1
               className={cn(
-                "text-[3.5rem] text-left sm:text-center sm:text-[7rem] md:text-[8rem] font-semibold bg-gradient-to-b from-zinc-600 to-zinc-700 text-transparent bg-clip-text motion-preset-focus-lg -motion-translate-y-in-25 motion-duration-[1s] transition-all duration-500",
+                "text-[3.5rem] text-left sm:text-center sm:text-[7rem] md:text-[7.5rem] font-semibold bg-gradient-to-b from-zinc-600 to-zinc-700 text-transparent bg-clip-text motion-preset-focus-lg -motion-translate-y-in-25 motion-duration-[1s] transition-all duration-500",
                 Headerfont.className
               )}
             >
@@ -113,7 +113,7 @@ const HomePage = async () => {
             alt="landing"
             width={1000}
             height={1000}
-            className="pointer-events-none scale-[1.7] xs:scale-[1.4] sm:scale-[1.2] md:scale-[0.8] lg:scale-[0.8] origin-bottom-right translate-x-[7rem] sm:translate-x-0 transition-all duration-500"
+            className="pointer-events-none scale-[1.7] xs:scale-[1.4] sm:scale-[1.2] md:scale-[0.8] lg:scale-[0.8] origin-bottom-right translate-x-[7rem] sm:translate-x-0 transition-all motion-preset-blur-up-lg motion-duration-[4s]"
           />
         </div>
 
