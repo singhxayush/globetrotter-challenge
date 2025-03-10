@@ -1,52 +1,17 @@
-// actions/multiplayer.ts
-
 import {redis} from "@/lib/redis";
-import {v4 as uuidv4} from "uuid";
-import {cityClues, DummyOptions, CityClue} from "@/data/dummy_data";
+import {cityClues} from "@/data/dummy_data";
+import {
+  GameStatus,
+  LeaderboardEntry,
+  MultiplayerGameSession,
+} from "@/types/multi_player";
 
 // Constants
-const MULTIPLAYER_SESSION_TTL = 3600; // 60 minutes in seconds
-const QUESTIONS_PER_GAME = 15;
+const SESSION_TTL = 3600; // 1 hour in seconds - This is equal to (lobby + game + extra time for leader board to persist) time
+// const GAME_TIME = 900; // 15 min actual game play time, starts when the host presses begin. Up until this point other client or players will wait and poll every 10-15 sec to get the game status: LOBBY | ACTIVE | COMPLETED, Once started, the player or the host will receive same response from this point onwards. {todo} user server sent events with redis pub-sub in future implementation. use same for realtime leader board.
+const QUESTIONS_PER_GAME = 15; // number of questions per multiplayer game
 
-// Types specific to multiplayer
-export interface MultiplayerQuestion {
-  id: number;
-  answered: boolean;
-  correct: boolean;
-  selectedOption: string | null;
-}
-
-export interface MultiplayerPlayerState {
-  userId: string;
-  questions: MultiplayerQuestion[];
-  currentQuestionIndex: number;
-  totalAnswered: number;
-  totalCorrect: number;
-  score: number;
-  completed: boolean;
-}
-
-export interface MultiplayerGame {
-  gameId: string;
-  createdBy: string;
-  startTime: number;
-  endTime: number | null;
-  players: string[];
-  playerStates: Record<string, MultiplayerPlayerState>;
-  status: "waiting" | "active" | "completed";
-  maxPlayers: number;
-  questionIds: number[];
-}
-
-export interface LeaderboardEntry {
-  userId: string;
-  score: number;
-  totalCorrect: number;
-  totalAnswered: number;
-  completionTime?: number;
-}
-
-// Helper functions
+// Helper to shuffle an array
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -56,517 +21,236 @@ function shuffleArray<T>(array: T[]): T[] {
   return newArray;
 }
 
-function getCorrectAnswer(cityClue: CityClue): string {
-  return `${cityClue.city}, ${cityClue.country}`;
-}
+// // Helper to get correct answer format
+// function getCorrectAnswer(cityClue: CityClue): string {
+//   return `${cityClue.city}, ${cityClue.country}`;
+// }
 
-function generateOptions(correctAnswer: string): string[] {
-  const filteredOptions = DummyOptions.filter(
-    (option) => option !== correctAnswer
-  );
-  const randomOptions = shuffleArray(filteredOptions).slice(0, 3);
-  const allOptions = [...randomOptions, correctAnswer];
-  return shuffleArray(allOptions);
-}
+// // Helper to generate options for a question
+// function generateOptions(correctAnswer: string): string[] {
+//   // Get 3 random options that aren't the correct answer
+//   const filteredOptions = DummyOptions.filter(
+//     (option) => option !== correctAnswer
+//   );
+//   const randomOptions = shuffleArray(filteredOptions).slice(0, 3);
 
-// Create a new multiplayer game
+//   // Add correct answer and shuffle
+//   const allOptions = [...randomOptions, correctAnswer];
+//   return shuffleArray(allOptions);
+// }
+
+// Helper to generate a random room code
+// function generateRoomCode(): string {
+//   const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Removed similar looking characters
+//   let result = "";
+//   for (let i = 0; i < 6; i++) {
+//     result += characters.charAt(Math.floor(Math.random() * characters.length));
+//   }
+//   return result;
+// }
+
+// Redis key helpers - 2 Keys
+// sessionKey stores game session (normal set)
+const sessionKey = (gameId: string) => `game:multi:session:${gameId}`;
+// leaderboardKey stores ranks of the participated players (Zset) based on number of correct answers.
+const leaderboardKey = (gameId: string) => `game:multi:leaderboard:${gameId}`;
+
+/**
+ * Create New multiplayer session
+ * @param hostId UserId of the User from user session
+ * @param hostDisplayName Name of the user from user session
+ * @param duration Test Duration @default 900 (15 Minutes)
+ * @returns GameId, Room Code
+ */
 export async function createMultiplayerGame(
-  creatorId: string,
-  maxPlayers: number = 2
-): Promise<MultiplayerGame> {
-  const gameId = uuidv4();
+  hostId: string,
+  hostDisplayName: string
+): Promise<{gameId: string}> {
+  if (process.env.NODE_ENV === "production") {
+    console.log(
+      "######### DEBUG #########\n",
+      "> createMultiplayerGame()\n",
+      "> user's name: " + hostDisplayName + "\n",
+      "#########################\n"
+    );
+  }
 
-  // Select random questions
+  const gameId = crypto.randomUUID();
+
+  // select random questions
   const totalQuestions = cityClues.length;
   const questionIds = Array.from({length: totalQuestions}, (_, i) => i + 1);
-  const selectedQuestionIds = shuffleArray(questionIds).slice(
+  const selectedQuestions = shuffleArray(questionIds).slice(
     0,
     QUESTIONS_PER_GAME
   );
 
-  // Create player's initial state
-  const creatorState: MultiplayerPlayerState = {
-    userId: creatorId,
-    questions: selectedQuestionIds.map((id) => ({
-      id,
-      answered: false,
-      correct: false,
-      selectedOption: null,
-    })),
-    currentQuestionIndex: 0,
-    totalAnswered: 0,
-    totalCorrect: 0,
-    score: 0,
-    completed: false,
-  };
-
-  const newGame: MultiplayerGame = {
+  // Create game session structure
+  const newSession: MultiplayerGameSession = {
     gameId,
-    createdBy: creatorId,
-    startTime: Date.now(),
-    endTime: null,
-    players: [creatorId],
-    playerStates: {[creatorId]: creatorState},
-    status: "waiting",
-    maxPlayers,
-    questionIds: selectedQuestionIds,
+    hostId,
+    hostDisplayName,
+    status: GameStatus.WAITING,
+    startTime: null,
+    questions: selectedQuestions,
   };
 
-  // Store in Redis
-  const gameKey = `multiplayer:game:${gameId}`;
-  await redis.set(gameKey, JSON.stringify(newGame), {
-    ex: MULTIPLAYER_SESSION_TTL,
-  });
+  // Create new leaderboard member entry
+  const newLeaderBoardEntry: LeaderboardEntry = {
+    userId: hostId,
+    userDisplayName: hostDisplayName,
+    totalAttempted: 0,
+  };
 
-  return newGame;
-}
+  // Start Redis transaction
+  const multi = redis.multi();
 
-// Get a multiplayer game by ID
-export async function getMultiplayerGame(
-  gameId: string
-): Promise<MultiplayerGame | null> {
-  const gameKey = `multiplayer:game:${gameId}`;
-  const game = await redis.get(gameKey);
+  // Store session details in a Redis hash
+  multi.set(sessionKey(gameId), newSession);
 
-  if (!game) return null;
-
-  if (typeof game === "object") {
-    return game as MultiplayerGame;
-  }
-
-  if (typeof game === "string") {
-    try {
-      return JSON.parse(game) as MultiplayerGame;
-    } catch (error) {
-      console.error("Failed to parse game JSON:", error);
-      return null;
-    }
-  }
-
-  return null;
-}
-
-// Join a multiplayer game
-export async function joinMultiplayerGame(
-  userId: string,
-  gameId: string
-): Promise<{success: boolean; game: MultiplayerGame | null; message: string}> {
-  const game = await getMultiplayerGame(gameId);
-
-  if (!game) {
-    return {success: false, game: null, message: "Game not found"};
-  }
-
-  if (game.status !== "waiting") {
-    return {success: false, game, message: "Game already started or completed"};
-  }
-
-  if (game.players.includes(userId)) {
-    return {success: true, game, message: "Already joined this game"};
-  }
-
-  if (game.players.length >= game.maxPlayers) {
-    return {success: false, game, message: "Game is already full"};
-  }
-
-  // Create player's initial state
-  const playerState: MultiplayerPlayerState = {
-    userId,
-    questions: game.questionIds.map((id) => ({
-      id,
-      answered: false,
-      correct: false,
-      selectedOption: null,
-    })),
-    currentQuestionIndex: 0,
-    totalAnswered: 0,
-    totalCorrect: 0,
+  multi.zadd(leaderboardKey(gameId), {
     score: 0,
-    completed: false,
-  };
-
-  // Add player to the game
-  game.players.push(userId);
-  game.playerStates[userId] = playerState;
-
-  // If max players reached, start the game
-  if (game.players.length === game.maxPlayers) {
-    game.status = "active";
-  }
-
-  // Update game in Redis
-  const gameKey = `multiplayer:game:${gameId}`;
-  await redis.set(gameKey, JSON.stringify(game), {ex: MULTIPLAYER_SESSION_TTL});
-
-  return {success: true, game, message: "Successfully joined the game"};
-}
-
-// Get current question for a player in multiplayer game
-export async function getMultiplayerCurrentQuestion(
-  userId: string,
-  gameId: string
-): Promise<{
-  question: CityClue | null;
-  options: string[] | null;
-  questionNumber: number | null;
-  totalQuestions: number | null;
-}> {
-  const game = await getMultiplayerGame(gameId);
-
-  if (!game || !game.players.includes(userId)) {
-    return {
-      question: null,
-      options: null,
-      questionNumber: null,
-      totalQuestions: null,
-    };
-  }
-
-  const playerState = game.playerStates[userId];
-  if (!playerState || playerState.completed) {
-    return {
-      question: null,
-      options: null,
-      questionNumber: null,
-      totalQuestions: null,
-    };
-  }
-
-  const currentQuestionId =
-    playerState.questions[playerState.currentQuestionIndex].id;
-  const question = cityClues.find((q) => q.id === currentQuestionId);
-
-  if (!question) {
-    return {
-      question: null,
-      options: null,
-      questionNumber: null,
-      totalQuestions: null,
-    };
-  }
-
-  const correctAnswer = getCorrectAnswer(question);
-  const options = generateOptions(correctAnswer);
-
-  return {
-    question,
-    options,
-    questionNumber: playerState.currentQuestionIndex + 1,
-    totalQuestions: QUESTIONS_PER_GAME,
-  };
-}
-
-// Submit an answer for multiplayer game
-export async function submitMultiplayerAnswer(
-  userId: string,
-  gameId: string,
-  selectedOption: string
-): Promise<{
-  correct: boolean;
-  correctAnswer: string;
-  nextQuestion: boolean;
-  rank: {rank: number; totalPlayers: number} | null;
-}> {
-  const game = await getMultiplayerGame(gameId);
-
-  if (!game || !game.players.includes(userId)) {
-    return {
-      correct: false,
-      correctAnswer: "",
-      nextQuestion: false,
-      rank: null,
-    };
-  }
-
-  const playerState = game.playerStates[userId];
-  if (!playerState || playerState.completed) {
-    return {
-      correct: false,
-      correctAnswer: "",
-      nextQuestion: false,
-      rank: null,
-    };
-  }
-
-  // Get the current question
-  if (playerState.currentQuestionIndex >= playerState.questions.length) {
-    return {
-      correct: false,
-      correctAnswer: "",
-      nextQuestion: false,
-      rank: null,
-    };
-  }
-
-  const currentQuestion =
-    playerState.questions[playerState.currentQuestionIndex];
-
-  // If already answered, return the current state
-  if (currentQuestion.answered) {
-    const question = cityClues.find((q) => q.id === currentQuestion.id);
-    return {
-      correct: currentQuestion.correct,
-      correctAnswer: question ? getCorrectAnswer(question) : "",
-      nextQuestion:
-        playerState.currentQuestionIndex < playerState.questions.length - 1,
-      rank: await calculatePlayerRank(game, userId),
-    };
-  }
-
-  // Get the question details
-  const question = cityClues.find((q) => q.id === currentQuestion.id);
-  if (!question) {
-    return {
-      correct: false,
-      correctAnswer: "",
-      nextQuestion: false,
-      rank: null,
-    };
-  }
-
-  // Get correct answer
-  const correctAnswer = getCorrectAnswer(question);
-
-  // Check if the selected option is correct
-  const isCorrect = selectedOption === correctAnswer;
-
-  // Update the player state
-  currentQuestion.answered = true;
-  currentQuestion.correct = isCorrect;
-  currentQuestion.selectedOption = selectedOption;
-  playerState.totalAnswered += 1;
-
-  if (isCorrect) {
-    playerState.totalCorrect += 1;
-  }
-
-  // Calculate the new score
-  playerState.score =
-    playerState.totalAnswered > 0
-      ? Math.round(
-          (playerState.totalCorrect / playerState.totalAnswered) * 100
-        ) / 100
-      : 0;
-
-  // Move to the next question
-  const hasNextQuestion =
-    playerState.currentQuestionIndex < playerState.questions.length - 1;
-  if (hasNextQuestion) {
-    playerState.currentQuestionIndex += 1;
-  } else {
-    playerState.completed = true;
-  }
-
-  // Check if all players have completed the game
-  const allCompleted = game.players.every(
-    (playerId) =>
-      game.playerStates[playerId] && game.playerStates[playerId].completed
-  );
-
-  if (allCompleted) {
-    game.status = "completed";
-    game.endTime = Date.now();
-  }
-
-  // Store updated game
-  const gameKey = `multiplayer:game:${gameId}`;
-  await redis.set(gameKey, JSON.stringify(game), {ex: MULTIPLAYER_SESSION_TTL});
-
-  // Calculate player's rank
-  const rankInfo = await calculatePlayerRank(game, userId);
-
-  return {
-    correct: isCorrect,
-    correctAnswer,
-    nextQuestion: hasNextQuestion,
-    rank: rankInfo,
-  };
-}
-
-// Calculate player's rank in the game
-async function calculatePlayerRank(
-  game: MultiplayerGame,
-  userId: string
-): Promise<{rank: number; totalPlayers: number} | null> {
-  if (!game.players.includes(userId)) return null;
-
-  // Sort players by score and then by total answered
-  const sortedPlayers = [...game.players].sort((a, b) => {
-    const stateA = game.playerStates[a];
-    const stateB = game.playerStates[b];
-
-    if (stateA.score !== stateB.score) {
-      return stateB.score - stateA.score; // Higher score first
-    }
-
-    if (stateA.totalCorrect !== stateB.totalCorrect) {
-      return stateB.totalCorrect - stateA.totalCorrect; // More correct answers first
-    }
-
-    return stateA.totalAnswered - stateB.totalAnswered; // Fewer questions answered first (efficiency)
+    member: JSON.stringify(newLeaderBoardEntry),
   });
 
-  const playerRank = sortedPlayers.indexOf(userId) + 1; // 1-based ranking
+  // Set expiration for all keys
+  multi.expire(sessionKey(gameId), SESSION_TTL);
+  multi.expire(leaderboardKey(gameId), SESSION_TTL);
 
-  return {
-    rank: playerRank,
-    totalPlayers: game.players.length,
-  };
+  await multi.exec();
+
+  return {gameId};
 }
 
-// Get leaderboard for a game
-export async function getMultiplayerLeaderboard(
-  gameId: string
-): Promise<LeaderboardEntry[]> {
-  const game = await getMultiplayerGame(gameId);
-
-  if (!game) return [];
-
-  // Create leaderboard entries from player states
-  const entries: LeaderboardEntry[] = game.players.map((playerId) => {
-    const state = game.playerStates[playerId];
-    return {
-      userId: playerId,
-      score: state.score,
-      totalCorrect: state.totalCorrect,
-      totalAnswered: state.totalAnswered,
-      completionTime: state.completed ? Date.now() - game.startTime : undefined,
-    };
-  });
-
-  // Sort entries: highest score first, then by completion time if available
-  entries.sort((a, b) => {
-    if (a.score !== b.score) return b.score - a.score;
-    if (a.completionTime && b.completionTime)
-      return a.completionTime - b.completionTime;
-    return 0;
-  });
-
-  return entries;
-}
-
-// Get available games to join
-export async function getAvailableMultiplayerGames(): Promise<
-  MultiplayerGame[]
-> {
-  const keys = await redis.keys("multiplayer:game:*");
-  const games: MultiplayerGame[] = [];
-
-  for (const key of keys) {
-    const game = await redis.get(key);
-    if (game) {
-      try {
-        const parsedGame =
-          typeof game === "string"
-            ? (JSON.parse(game) as MultiplayerGame)
-            : (game as MultiplayerGame);
-        if (
-          parsedGame.status === "waiting" &&
-          parsedGame.players.length < parsedGame.maxPlayers
-        ) {
-          games.push(parsedGame);
-        }
-      } catch (error) {
-        console.error("Failed to parse game:", error);
-      }
-    }
-  }
-
-  return games;
-}
-
-// Skip the current question in multiplayer game
-export async function skipMultiplayerQuestion(
+/**
+ * Join a multiplayer game session from the shared URL
+ * @param userId userID of the user from user details who made the request
+ * @param userDisplayName Name of the user who is entering the room
+ * @param gameId gameId of the room, extracted from URL params shared by the host to the world
+ * @returns Destails of the session such as: status, isHost, hostDisplayName, hostId
+ */
+export async function joinMultiPlayerGame(
   userId: string,
+  userDisplayName: string,
   gameId: string
 ): Promise<{
-  nextQuestion: boolean;
-  rank: {rank: number; totalPlayers: number} | null;
+  isHost: boolean;
+  status: string;
+  hostName: string;
+  hostId: string;
 }> {
-  const game = await getMultiplayerGame(gameId);
-
-  if (!game || !game.players.includes(userId)) {
-    return {
-      nextQuestion: false,
-      rank: null,
-    };
-  }
-
-  const playerState = game.playerStates[userId];
-  if (!playerState || playerState.completed) {
-    return {
-      nextQuestion: false,
-      rank: null,
-    };
-  }
-
-  // If already at the end, no more questions to skip
-  if (playerState.currentQuestionIndex >= playerState.questions.length - 1) {
-    playerState.completed = true;
-
-    // Check if all players have completed
-    const allCompleted = game.players.every(
-      (playerId) =>
-        game.playerStates[playerId] && game.playerStates[playerId].completed
+  if (process.env.NODE_ENV === "production") {
+    console.log(
+      "######### DEBUG #########\n",
+      "> joinMultiPlayerGame()\n",
+      "> user's name: " + userDisplayName + "\n",
+      "\n#######################\n"
     );
+  }
 
-    if (allCompleted) {
-      game.status = "completed";
-      game.endTime = Date.now();
-    }
+  /*
+    {todo}
+    1. If a user tries to enter a room and status is not waiting. USER the questions.
+    2. If the game has finished or does not exist give user options to create a new game
+  */
 
-    // Store updated game
-    const gameKey = `multiplayer:game:${gameId}`;
-    await redis.set(gameKey, JSON.stringify(game), {
-      ex: MULTIPLAYER_SESSION_TTL,
-    });
+  // Fetch game session details and cast it to the MultiplayerGameSession interface
+  const rawSessionDetails = await redis.get(sessionKey(gameId));
+  const sessionDetails: MultiplayerGameSession =
+    rawSessionDetails as MultiplayerGameSession;
 
+  if (!sessionDetails || !sessionDetails.status) {
+    throw new Error("Game session does not exist.");
+  }
+
+  // Check if the joining User is the host of the room or not
+  const isHost = sessionDetails.hostId === userId;
+
+  if (sessionDetails.status !== GameStatus.WAITING) {
     return {
-      nextQuestion: false,
-      rank: await calculatePlayerRank(game, userId),
+      isHost,
+      status: sessionDetails.status,
+      hostName: sessionDetails.hostDisplayName,
+      hostId: sessionDetails.hostId,
     };
   }
 
-  // Move to the next question
-  playerState.currentQuestionIndex += 1;
+  // Create new leaderboard member entry
+  const newLeaderBoardEntry: LeaderboardEntry = {
+    userId: userId,
+    userDisplayName: userDisplayName,
+    totalAttempted: 0,
+  };
 
-  // Store updated game
-  const gameKey = `multiplayer:game:${gameId}`;
-  await redis.set(gameKey, JSON.stringify(game), {ex: MULTIPLAYER_SESSION_TTL});
+  // Start Redis transaction
+  const multi = redis.multi();
+
+  // Add player to leaderboard(zset) with initial score of 0
+  multi.zadd(leaderboardKey(gameId), {
+    score: 0,
+    member: JSON.stringify(newLeaderBoardEntry),
+  });
+
+  // Execute transaction
+  await multi.exec();
 
   return {
-    nextQuestion:
-      playerState.currentQuestionIndex < playerState.questions.length - 1,
-    rank: await calculatePlayerRank(game, userId),
+    isHost,
+    status: sessionDetails.status,
+    hostName: sessionDetails.hostDisplayName,
+    hostId: sessionDetails.hostId,
   };
 }
 
-
-// Calculate a player's rank in a multiplayer game
-export async function getUserRank(
-  gameId: string,
-  userId: string
-): Promise<{ rank: number; totalPlayers: number } | null> {
-  const game = await getMultiplayerGame(gameId);
-
-  if (!game || !game.players.includes(userId)) {
-    return null;
+export async function startGame(
+  userId: string,
+  gameId: string
+): Promise<{
+  status: string;
+}> {
+  if (process.env.NODE_ENV === "production") {
+    console.log(
+      "######### DEBUG #########\n",
+      "> startGame()\n",
+      "> user's name: " + userId + "\n",
+      "> game room: " + gameId + "\n",
+      "#########################\n"
+    );
   }
 
-  // Get all player scores
-  const playerScores = Object.values(game.playerStates).map((player) => ({
-    userId: player.userId,
-    score: player.score,
-  }));
+  const rawSessionDetails = await redis.get(sessionKey(gameId));
+  const sessionDetails: MultiplayerGameSession =
+    rawSessionDetails as MultiplayerGameSession;
 
-  // Sort scores in descending order
-  playerScores.sort((a, b) => b.score - a.score);
+  if (!sessionDetails) {
+    throw new Error("Game session does not exist.");
+  }
 
-  // Find the user's rank (1-based index)
-  const rank = playerScores.findIndex((player) => player.userId === userId) + 1;
+  if (sessionDetails.hostId !== userId) {
+    throw new Error("You are not host of this room!");
+  }
+
+  if (sessionDetails.status === GameStatus.ACTIVE) {
+    throw new Error("Game has already started!");
+  }
+
+  if (sessionDetails.status === GameStatus.COMPLETED) {
+    throw new Error("Game already completed. Create New game?");
+  }
+
+  try {
+    sessionDetails.status = GameStatus.ACTIVE;
+    sessionDetails.startTime = Date.now();
+
+    await redis.set(sessionKey(gameId), JSON.stringify(sessionDetails));
+
+    console.log("Game session updated to ACTIVE");
+  } catch (error) {
+    console.error("Failed to start game:", error);
+    throw new Error("Failed to update game session. Database error.");
+  }
 
   return {
-    rank,
-    totalPlayers: playerScores.length,
+    status: GameStatus.ACTIVE,
   };
 }

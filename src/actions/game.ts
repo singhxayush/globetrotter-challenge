@@ -1,5 +1,5 @@
 import {redis} from "@/lib/redis";
-import {GameSession, GameQuestion} from "../types/game";
+import {GameSession, GameQuestion} from "../types/single_player";
 import {cityClues, DummyOptions, CityClue} from "@/data/dummy_data";
 
 const SESSION_TTL = 900; // 15 min
@@ -33,11 +33,14 @@ function generateOptions(correctAnswer: string): string[] {
   return shuffleArray(allOptions);
 }
 
-// Create or reset a game session
-// Modify the createGameSession function to ensure it properly deletes any existing session
+// Create a new game sesstion
+// Delete any existing session
+// Or may be ask a user to continue with existing session or start a new one - [DONE] => Through Game status route
 export async function createGameSession(userId: string): Promise<GameSession> {
   // Check if a session already exists and delete it
-  await deleteGameSession(userId);
+  // Redundant - because new sesssion will set new data as value to the session key(userID) replacing the old data.
+  // No need to delete explicitly.
+  // await deleteGameSession(userId);
 
   // Select 15 random questions from the dummy data
   const totalQuestions = cityClues.length;
@@ -52,7 +55,7 @@ export async function createGameSession(userId: string): Promise<GameSession> {
     selectedOption: null,
   }));
 
-  // Create a new session
+  // Create a new session sr
   const newSession: GameSession = {
     userId,
     startTime: Date.now(),
