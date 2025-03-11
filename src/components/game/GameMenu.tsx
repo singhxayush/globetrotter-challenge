@@ -1,6 +1,6 @@
 import {GameState} from "@/app/game/page";
-import { ScanSearch, Timer, Users, Zap } from "lucide-react";
-import { Button } from "../ui/button";
+import {ScanSearch, Timer, Users, Zap} from "lucide-react";
+import {Button} from "../ui/button";
 
 type GameMenuProps = {
   startGame: () => Promise<void>;
@@ -8,6 +8,9 @@ type GameMenuProps = {
 };
 
 export default function GameMenu({startGame, gameState}: GameMenuProps) {
+  const gotoMultiplayerMenu = () => {
+    window.location.href = "/game/multiplayer";
+  };
   return (
     <div className="w-auto h-full flex flex-col items-center justify-center">
       <h2 className="text-2xl font-semibold mb-4">
@@ -47,9 +50,8 @@ export default function GameMenu({startGame, gameState}: GameMenuProps) {
           {gameState.loading ? "Starting..." : "Start New Game"}
         </Button>
         <Button
-          // onClick={startMultiplayerGame}
-          // disabled={gameState.loading}
-          disabled={true}
+          onClick={gotoMultiplayerMenu}
+          disabled={gameState.loading}
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-2 w-[250px] rounded-md transition-colors duration-300 shadow-md hover:shadow-lg"
         >
           {gameState.loading ? "Starting..." : "New Multiplayer Game"}

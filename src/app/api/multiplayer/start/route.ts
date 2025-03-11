@@ -8,10 +8,6 @@ export async function POST(request: NextRequest) {
   const {searchParams} = new URL(request.url);
   const gameId = searchParams.get("gameId");
 
-  console.log("\n------- POST /api/multiplayer/start -------\n");
-
-  console.log(gameId);
-
   // Validate gameId
   if (!gameId) {
     return NextResponse.json({error: "Game ID is required"}, {status: 400});
@@ -30,7 +26,6 @@ export async function POST(request: NextRequest) {
   const userId = user.id;
 
   try {
-    console.log("\n------- TRY CATCH -------\n");
     const start = await startGame(userId as string, gameId);
 
     return NextResponse.json({...start, success: true}, {status: 200});

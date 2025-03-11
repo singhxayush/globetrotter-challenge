@@ -1,9 +1,9 @@
-import {joinMultiPlayerGame} from "@/actions/multiplayer";
+import {polling} from "@/actions/multiplayer";
 import {auth} from "@/auth";
 import {NextRequest, NextResponse} from "next/server";
 
-// GET /api/multiplayer/join?gameId=xyz
-export async function POST(request: NextRequest) {
+// GET /api/multiplayer/status?gameId=xyz
+export async function GET(request: NextRequest) {
   // Extract gameId from URL parameters
   const {searchParams} = new URL(request.url);
   const gameId = searchParams.get("gameId");
@@ -23,22 +23,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({error: "User not found"}, {status: 404});
   }
 
-  const userId = user.id;
-  const userDisplayName = user.name;
-
   try {
-    // Join the multiplayer game session
-    const joinResult = await joinMultiPlayerGame(
-      userId as string,
-      userDisplayName as string,
-      gameId
-    );
+    const getStatus = await polling(gameId);
 
-    return NextResponse.json({...joinResult, success: true}, {status: 200});
+    return NextResponse.json({...getStatus, success: true}, {status: 200});
   } catch (error) {
-    console.error("Failed to join game:", error);
+    console.error("Failed to get the game status while polling:", error);
     return NextResponse.json(
-      {error: "Failed to join game", message: (error as Error).message},
+      {error: "Failed to get the game status", message: (error as Error).message},
       {status: 500}
     );
   }

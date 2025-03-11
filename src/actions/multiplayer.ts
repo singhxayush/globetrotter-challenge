@@ -56,7 +56,7 @@ const sessionKey = (gameId: string) => `game:multi:session:${gameId}`;
 const leaderboardKey = (gameId: string) => `game:multi:leaderboard:${gameId}`;
 
 /**
- * Create New multiplayer session
+ * Create New multiplayer session as a hset.
  * @param hostId UserId of the User from user session
  * @param hostDisplayName Name of the user from user session
  * @param duration Test Duration @default 900 (15 Minutes)
@@ -66,7 +66,7 @@ export async function createMultiplayerGame(
   hostId: string,
   hostDisplayName: string
 ): Promise<{gameId: string}> {
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "development") {
     console.log(
       "######### DEBUG #########\n",
       "> createMultiplayerGame()\n",
@@ -106,7 +106,9 @@ export async function createMultiplayerGame(
   const multi = redis.multi();
 
   // Store session details in a Redis hash
-  multi.set(sessionKey(gameId), newSession);
+  multi.hset(sessionKey(gameId), {
+    ...newSession,
+  });
 
   multi.zadd(leaderboardKey(gameId), {
     score: 0,
@@ -139,12 +141,12 @@ export async function joinMultiPlayerGame(
   hostName: string;
   hostId: string;
 }> {
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "development") {
     console.log(
       "######### DEBUG #########\n",
       "> joinMultiPlayerGame()\n",
       "> user's name: " + userDisplayName + "\n",
-      "\n#######################\n"
+      "#######################\n"
     );
   }
 
@@ -154,26 +156,38 @@ export async function joinMultiPlayerGame(
     2. If the game has finished or does not exist give user options to create a new game
   */
 
-  // Fetch game session details and cast it to the MultiplayerGameSession interface
-  const rawSessionDetails = await redis.get(sessionKey(gameId));
-  const sessionDetails: MultiplayerGameSession =
-    rawSessionDetails as MultiplayerGameSession;
+  // Define the fields you want to retrieve
+  const fieldsToGet = ["status", "hostId", "hostDisplayName"];
 
-  if (!sessionDetails || !sessionDetails.status) {
-    throw new Error("Game session does not exist.");
+  // Use HMGET to retrieve specific fields
+  const rawSessionDetails = (await redis.hmget(
+    sessionKey(gameId),
+    ...fieldsToGet
+  )) as Partial<MultiplayerGameSession>;
+
+  console.log(">> Raw session details: ", rawSessionDetails);
+
+  if (rawSessionDetails === null) {
+    throw new Error("Game session does not exist or is completed.");
+  }
+
+  const sessionDetails: Partial<MultiplayerGameSession> = {
+    status: rawSessionDetails.status,
+    hostId: rawSessionDetails.hostId,
+    hostDisplayName: rawSessionDetails.hostDisplayName,
+  };
+
+  if (
+    !sessionDetails ||
+    !sessionDetails.status ||
+    (sessionDetails.status !== GameStatus.WAITING &&
+      sessionDetails.status !== GameStatus.ACTIVE)
+  ) {
+    throw new Error("Game session does not exist or is completed.");
   }
 
   // Check if the joining User is the host of the room or not
   const isHost = sessionDetails.hostId === userId;
-
-  if (sessionDetails.status !== GameStatus.WAITING) {
-    return {
-      isHost,
-      status: sessionDetails.status,
-      hostName: sessionDetails.hostDisplayName,
-      hostId: sessionDetails.hostId,
-    };
-  }
 
   // Create new leaderboard member entry
   const newLeaderBoardEntry: LeaderboardEntry = {
@@ -181,6 +195,8 @@ export async function joinMultiPlayerGame(
     userDisplayName: userDisplayName,
     totalAttempted: 0,
   };
+
+  console.log(">> New leaboard entry", newLeaderBoardEntry);
 
   // Start Redis transaction
   const multi = redis.multi();
@@ -197,8 +213,8 @@ export async function joinMultiPlayerGame(
   return {
     isHost,
     status: sessionDetails.status,
-    hostName: sessionDetails.hostDisplayName,
-    hostId: sessionDetails.hostId,
+    hostName: sessionDetails.hostDisplayName!,
+    hostId: sessionDetails.hostId!,
   };
 }
 
@@ -208,7 +224,7 @@ export async function startGame(
 ): Promise<{
   status: string;
 }> {
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "development") {
     console.log(
       "######### DEBUG #########\n",
       "> startGame()\n",
@@ -218,9 +234,26 @@ export async function startGame(
     );
   }
 
-  const rawSessionDetails = await redis.get(sessionKey(gameId));
-  const sessionDetails: MultiplayerGameSession =
-    rawSessionDetails as MultiplayerGameSession;
+  // Define the fields you want to retrieve
+  const fieldsToGet = ["status", "hostId"];
+
+  // Use HMGET to retrieve specific fields
+  const rawSessionDetails = (await redis.hmget(
+    sessionKey(gameId),
+    ...fieldsToGet
+  )) as Partial<MultiplayerGameSession>;
+
+  // This
+  // const sessionDetails: MultiplayerGameSession =
+  //   rawSessionDetails as MultiplayerGameSession;
+
+  // or
+
+  // this: which is more defined
+  const sessionDetails: Partial<MultiplayerGameSession> = {
+    status: rawSessionDetails.status,
+    hostId: rawSessionDetails.hostId,
+  };
 
   if (!sessionDetails) {
     throw new Error("Game session does not exist.");
@@ -230,9 +263,12 @@ export async function startGame(
     throw new Error("You are not host of this room!");
   }
 
-  if (sessionDetails.status === GameStatus.ACTIVE) {
-    throw new Error("Game has already started!");
-  }
+  // Do not allow players to join if game has started - optional
+  // if (sessionDetails.status === GameStatus.ACTIVE) {
+  //   throw new Error("Game has already started!");
+  // }
+
+  // {todo} Do not allow players to join if current_time - start_time > 15 mins
 
   if (sessionDetails.status === GameStatus.COMPLETED) {
     throw new Error("Game already completed. Create New game?");
@@ -242,7 +278,7 @@ export async function startGame(
     sessionDetails.status = GameStatus.ACTIVE;
     sessionDetails.startTime = Date.now();
 
-    await redis.set(sessionKey(gameId), JSON.stringify(sessionDetails));
+    await redis.hset(sessionKey(gameId), {...sessionDetails});
 
     console.log("Game session updated to ACTIVE");
   } catch (error) {
@@ -252,5 +288,34 @@ export async function startGame(
 
   return {
     status: GameStatus.ACTIVE,
+  };
+}
+
+export async function polling(gameId: string): Promise<{
+  status: string;
+}> {
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      "######### DEBUG #########\n",
+      "> polling()\n",
+      "> gameId: " + gameId + "\n",
+      "#########################\n"
+    );
+  }
+
+  // Retrieve the current status for polling
+  const rawSessionDetails = await redis.hget(sessionKey(gameId), "status");
+
+  // console.log("Raw detail session:", rawSessionDetails);
+  // console.log("TYPE OF Raw detail session:", typeof rawSessionDetails);
+
+  if (!rawSessionDetails) {
+    throw new Error("Game session does not exist.");
+  }
+
+  const gameSession = rawSessionDetails as string;
+
+  return {
+    status: gameSession,
   };
 }
