@@ -1,11 +1,6 @@
-import {Barlow, Lato, Roboto} from "next/font/google";
-import {Button} from "@/components/ui/button";
-import {auth, signOut} from "@/auth";
+import {Barlow, Lato} from "next/font/google";
 import {cn} from "@/lib/utils";
 import Image from "next/image";
-import {LogIn} from "lucide-react";
-import Link from "next/link";
-import {NavDropdown} from "@/components/landing/NarDropdown";
 import HomepagePlayButton from "@/components/landing/HomepagePlayButton";
 
 const Headerfont = Barlow({
@@ -14,68 +9,14 @@ const Headerfont = Barlow({
   preload: true,
 });
 
-const fontRoboto = Roboto({
-  subsets: ["cyrillic"],
-  weight: ["500", "100", "300", "400"],
-});
-
 const fontLato = Lato({
   subsets: ["latin"],
   weight: ["100", "300", "400", "700", "900"],
 });
 
 const HomePage = async () => {
-  const session = await auth();
-
-  async function handleSignOut() {
-    "use server";
-    await signOut({redirectTo: "/"});
-  }
-
   return (
     <main className="overflow-auto overflow-x-hidden">
-      <nav
-        className="fixed top-0 left-0 right-0 z-[2000] w-full h-20 flex justify-between 
-          items-center bg-white shadow-xl shadow-neutral-800/10 px-4 py-2
-          motion-translate-y-in-[-200%] motion-ease motion-duration-500 border-b-[0.1pt] border-black/40"
-      >
-        {/* Left - LOGO + NAME */}
-        <div className="flex items-center justify-center gap-2">
-          <Image
-            src="/logo.svg"
-            alt="Logo"
-            width={0}
-            height={0}
-            className="rounded-full w-12 h-12 bg-zinc-100"
-          />
-          <h1
-            className={cn(
-              "text-neutral-600 text-xl font-normal sm:block hidden",
-              fontRoboto.className
-            )}
-          >
-            Globetrotter
-          </h1>
-        </div>
-
-        {/* Right - DROPDOWN */}
-        <div className="mr-0 sm:mr-2">
-          {session ? (
-            <NavDropdown handleSignOut={handleSignOut} session={session} />
-          ) : (
-            <Link href="/auth/login">
-              <Button
-                className="motion-preset-focus-lg motion-duration-2000 group-hover text-neutral-950 bg-white-500 border-[0.11pt] border-black/20
-                rounded-lg px-4 py-2 hover:cursor-pointer shadow-lg hover:bg-white-500 hover:shadow-none
-                active:shadow-none active:bg-white-700 transition-all active:scale-[0.99]"
-              >
-                <LogIn />
-              </Button>
-            </Link>
-          )}
-        </div>
-      </nav>
-
       <section className="landing_section relative overflow-hidden">
         <div className="absolute z-[1000]">
           <div className="w-[100dvw] h-[100vh] bg-[#F8F8FF]/20 lg:bg-transparent flex flex-col mt-20 items-center sm:items-start sm:pl-10 pl-0 backdrop-blur-sm md:backdrop-blur-[2px] lg:backdrop-blur-0">

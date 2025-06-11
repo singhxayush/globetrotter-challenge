@@ -1,4 +1,4 @@
-import {GameState} from "@/app/game/page";
+import {GameState} from "@/app/(game)/play/page";
 import {Button} from "../ui/button";
 import {CircleX} from "lucide-react";
 

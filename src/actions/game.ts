@@ -35,7 +35,7 @@ function generateOptions(correctAnswer: string): string[] {
 
 // Create a new game sesstion
 // Delete any existing session
-// Or may be ask a user to continue with existing session or start a new one - [DONE] => Through Game status route
+// {todo} Or may be ask a user to continue with existing session or start a new one
 export async function createGameSession(userId: string): Promise<GameSession> {
   // Check if a session already exists and delete it
   // Redundant - because new sesssion will set new data as value to the session key(userID) replacing the old data.

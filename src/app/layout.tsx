@@ -1,6 +1,9 @@
 import type {Metadata} from "next";
 import {Geist, Geist_Mono} from "next/font/google";
 import "./globals.css";
+import NavBar from "@/components/NavBar";
+import {auth} from "@/auth";
+import {signOut} from "next-auth/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,9 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Globetrotter Challenge",
   description: "Geo guessing game",
-  icons: {
-    icon: "/favicon.ico",
-  },
+
   openGraph: {
     title: "Globetrotter Challenge",
     description:
@@ -44,16 +45,24 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
+  async function handleSignOut() {
+    "use server";
+    await signOut({redirectTo: "/"});
+  }
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <NavBar session={session} handleSignOut={handleSignOut} />
         {children}
       </body>
     </html>

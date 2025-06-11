@@ -95,11 +95,15 @@ export async function createMultiplayerGame(
     questions: selectedQuestions,
   };
 
+  // // Add user attempts dynamically (initializing userIds with 0 attempts)
+  // const userAttempts = {
+  //   [hostId]: 0,
+  // };
+
   // Create new leaderboard member entry
   const newLeaderBoardEntry: LeaderboardEntry = {
     userId: hostId,
     userDisplayName: hostDisplayName,
-    totalAttempted: 0,
   };
 
   // Start Redis transaction
@@ -108,6 +112,7 @@ export async function createMultiplayerGame(
   // Store session details in a Redis hash
   multi.hset(sessionKey(gameId), {
     ...newSession,
+    [hostId]: 0,
   });
 
   multi.zadd(leaderboardKey(gameId), {
@@ -165,7 +170,7 @@ export async function joinMultiPlayerGame(
     ...fieldsToGet
   )) as Partial<MultiplayerGameSession>;
 
-  console.log(">> Raw session details: ", rawSessionDetails);
+  // console.log(">> Raw session details: ", rawSessionDetails);
 
   if (rawSessionDetails === null) {
     throw new Error("Game session does not exist or is completed.");
@@ -193,13 +198,14 @@ export async function joinMultiPlayerGame(
   const newLeaderBoardEntry: LeaderboardEntry = {
     userId: userId,
     userDisplayName: userDisplayName,
-    totalAttempted: 0,
   };
 
   console.log(">> New leaboard entry", newLeaderBoardEntry);
 
   // Start Redis transaction
   const multi = redis.multi();
+
+  multi.hset(sessionKey(gameId), {[userId]: 0});
 
   // Add player to leaderboard(zset) with initial score of 0
   multi.zadd(leaderboardKey(gameId), {
@@ -317,5 +323,55 @@ export async function polling(gameId: string): Promise<{
 
   return {
     status: gameSession,
+  };
+}
+
+// Get Questions
+/*
+{Todo}
+- validate the old response write back the response to the redis
+- get the question index and question Id
+- check if the user can still continue to play(time limit + questions left)
+- Now what are important data that needs to be received and sent back
+- receive(gameId, userId, questionId)
+- send (next question + options + clues + time_left + )
+*/
+export async function verifyResponse_sendNextQuestion(
+  gameId: string,
+  userId: string,
+): Promise<{
+  // question: CityClue | null;
+  // options: string[] | null;
+  // questionNumber: number | null;
+  // totalQuestions: number | null;
+  isComplete: boolean;
+}> {
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      "######### DEBUG #########\n",
+      "> verifyResponse_sendNextQuestion()\n",
+      "> user's name: " + userId + "\n",
+      "> game room: " + gameId + "\n",
+      "#########################\n"
+    );
+  }
+
+  // Define the fields you want to retrieve
+  const fieldsToGet = ["status", "hostId", "questions"];
+  const rawSessionDetails = (await redis.hmget(
+    sessionKey(gameId),
+    ...fieldsToGet
+  )) as Partial<MultiplayerGameSession>;
+
+  
+  console.log(">> Raw session details: ", rawSessionDetails);
+  console.log(rawSessionDetails?.questions);
+
+  if (rawSessionDetails === null) {
+    throw new Error("Game session does not exist or is completed.");
+  }
+
+  return {
+    isComplete: false,
   };
 }

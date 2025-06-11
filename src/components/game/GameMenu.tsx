@@ -1,62 +1,194 @@
-import {GameState} from "@/app/game/page";
-import {ScanSearch, Timer, Users, Zap} from "lucide-react";
-import {Button} from "../ui/button";
+"use client";
 
-type GameMenuProps = {
-  startGame: () => Promise<void>;
-  gameState: GameState;
+import {cn} from "@/lib/utils";
+import {IoIosArrowBack} from "react-icons/io";
+import {useRouter} from "next/navigation";
+import {useEffect, useState} from "react";
+import Image from "next/image";
+import {CgSpinner} from "react-icons/cg";
+
+enum GameOpt {
+  QUIZ = "quiz",
+  MAP = "map",
+}
+
+enum GameMode {
+  SINGLE = "single",
+  MULTI = "multi",
+}
+
+interface GameState {
+  gameOpt: GameOpt | null;
+  gameMode: GameMode | null;
+}
+
+const INITIAL_GAME_STATE = {
+  gameOpt: null,
+  gameMode: null,
 };
 
-export default function GameMenu({startGame, gameState}: GameMenuProps) {
-  const gotoMultiplayerMenu = () => {
-    window.location.href = "/game/multiplayer";
+export default function GameMenu() {
+  const router = useRouter();
+  const [isGameStarting, setGameStarting] = useState<boolean>(false);
+  const [state, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
+  const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
+
+  useEffect(() => {
+    console.log(state);
+  }, [state]);
+
+  const handleOptionClick = (option: GameOpt) => {
+    setGameState((prev) => ({
+      ...prev,
+      gameOpt: option,
+    }));
   };
+
+  const handleModeClick = (mode: GameMode) => {
+    if (selectedMode === null && !isGameStarting) {
+      setGameStarting(true);
+      setSelectedMode(mode);
+      setGameState((prev) => ({
+        ...prev,
+        gameMode: mode,
+      }));
+
+      if (mode === GameMode.SINGLE) {
+        
+        router.push("/play");
+      } else if (mode === GameMode.MULTI) {
+      }
+      setGameStarting(false);
+    }
+  };
+
+  const handleBackButton = () => {
+    setGameStarting(false);
+    setSelectedMode(null);
+    setGameState(INITIAL_GAME_STATE);
+  };
+
   return (
-    <div className="w-auto h-full flex flex-col items-center justify-center">
-      <h2 className="text-2xl font-semibold mb-4">
-        Welcome to the Globetrotter Challenge!
-      </h2>
-      <p className="mb-6 text-gray-700">
-        Test your knowledge of cities around the world with clues, fun facts,
-        and trivia!
-      </p>
-      <div className="mb-8 grid grid-cols-2 gap-4 text-center">
-        <div className="bg-blue-50 p-4 w-full gap-2 flex flex-col items-center justify-center rounded-lg">
-          <Timer className="w-10 h-10 mb-2" />
-          <p className="text-sm text-gray-700">15 minute challenge</p>
-        </div>
-
-        <div className="bg-blue-50 p-4 w-full gap-2 flex flex-col items-center justify-center rounded-lg">
-          <ScanSearch className="w-10 h-10 mb-2" />
-          <p className="text-sm text-gray-700">Solve clues</p>
-        </div>
-
-        <div className="bg-blue-50 p-4 w-full gap-2 flex flex-col items-center justify-center rounded-lg">
-          <Zap className="w-10 h-10 mb-2" />
-          <p className="text-sm text-gray-700">Build your streak</p>
-        </div>
-
-        <div className="bg-blue-50 p-4 w-full gap-2 flex flex-col items-center justify-center rounded-lg">
-          <Users className="w-10 h-10 mb-2" />
-          <p className="text-sm text-gray-700">Multiplayer mode</p>
-        </div>
+    <div className="w-auto h-full flex flex-col items-end md:items-start pt-[90px] gap-2 p-4">
+      <div
+        onClick={handleBackButton}
+        className={cn(
+          "w-full flex items-center justify-between rounded-sm text-sm px-2 gap-2",
+          state.gameOpt !== null && "cursor-default"
+        )}
+      >
+        <h1>{state.gameOpt !== null ? "Mode:" : "Options:"}</h1>
+        {state.gameOpt !== null && (
+          <span className="flex items-center cursor-pointer hover:bg-neutral-700/10 hover:rounded-lg">
+            <IoIosArrowBack />
+            <h1 className="mr-0">Back</h1>
+          </span>
+        )}
       </div>
-      <div className="flex flex-col md:flex-row items-center justify-center gap-2">
-        <Button
-          onClick={startGame}
-          disabled={gameState.loading}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-2 w-[250px] rounded-md transition-colors duration-300 shadow-md hover:shadow-lg"
-        >
-          {gameState.loading ? "Starting..." : "Start New Game"}
-        </Button>
-        <Button
-          onClick={gotoMultiplayerMenu}
-          disabled={gameState.loading}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-2 w-[250px] rounded-md transition-colors duration-300 shadow-md hover:shadow-lg"
-        >
-          {gameState.loading ? "Starting..." : "New Multiplayer Game"}
-        </Button>
+      <div className="grid grid-cols-1 grid-rows-2 sm:grid-cols-2 sm:grid-rows-1 w-full flex-auto gap-2 md:gap-4">
+        {state.gameOpt === null ? (
+          <>
+            <div
+              onClick={() => handleOptionClick(GameOpt.QUIZ)}
+              className="md:border-[1pt] bg-white border-none shadow-md shadow-black/5 rounded-md flex items-center justify-center text-sm md:text-lg text-center cursor-pointer overflow-hidden relative"
+            >
+              <div className="w-full text-neutral-950/70 p-2 rounded-md font-black text-2xl sm:text-3xl md:text-4xl h-full flex items-center justify-center absolute inset-0 backdrop-blur-sm sm:backdrop-blur-sm sm:hover:backdrop-blur-[2px] transition-all duration-300 z-10">
+                Quiz
+              </div>
+              <span className="absolute origin-top w-full h-full scale-[1] translate-y-0 sm:scale-[1.6] xs:-translate-y-16 sm:translate-y-10 md:-translate-y-0 lg:scale-[1] lg:translate-y-0">
+                <Image
+                  src="/quiz.svg"
+                  alt="single player"
+                  height={1000}
+                  width={1000}
+                  className="object-cover"
+                />
+              </span>
+            </div>
+
+            <div
+              onClick={() => handleOptionClick(GameOpt.MAP)}
+              className="md:border-[1pt] bg-white border-none shadow-md shadow-black/5 rounded-md flex items-center justify-center text-sm md:text-lg text-center cursor-pointer overflow-hidden relative"
+            >
+              <div className="w-full text-neutral-950/70 p-2 rounded-md font-black text-2xl sm:text-3xl md:text-4xl h-full flex items-center justify-center absolute inset-0 backdrop-blur-sm sm:hover:backdrop-blur-[2px] transition-all duration-300 z-10">
+                World Map
+              </div>
+              <span className="absolute origin-top w-full h-full scale-[1] translate-y-0 sm:scale-[1.6] xs:-translate-y-16 sm:translate-y-10 md:-translate-y-0 lg:scale-[1] lg:translate-y-0">
+                <Image
+                  src="/image_map.svg"
+                  alt="single player"
+                  height={1000}
+                  width={1000}
+                  className="object-cover"
+                />
+              </span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div
+              onClick={() => handleModeClick(GameMode.SINGLE)}
+              className={`md:border-[1pt] bg-white border-none shadow-md shadow-black/5 rounded-md flex items-center justify-center text-sm md:text-lg text-center ${
+                selectedMode === null || selectedMode === GameMode.SINGLE
+                  ? "cursor-pointer"
+                  : "cursor-not-allowed opacity-50"
+              } overflow-hidden relative`}
+            >
+              <div className="w-full text-neutral-950/70 p-2 rounded-md font-black text-2xl sm:text-3xl md:text-4xl h-full flex items-center justify-center absolute inset-0 backdrop-blur-sm sm:hover:backdrop-blur-[2px] transition-all duration-300 z-10">
+                {isGameStarting && state.gameMode === GameMode.SINGLE ? (
+                  <Spinner />
+                ) : (
+                  "Single Player"
+                )}
+              </div>
+              <span className="absolute origin-top w-full h-full scale-[1] translate-y-0 sm:scale-[1.6] xs:-translate-y-16 sm:translate-y-10 md:-translate-y-0 lg:scale-[1] lg:translate-y-0">
+                <Image
+                  src="/singleplayer.svg"
+                  alt="single player"
+                  height={1000}
+                  width={1000}
+                  className="object-cover"
+                />
+              </span>
+            </div>
+
+            <div
+              onClick={() => handleModeClick(GameMode.MULTI)}
+              className={`md:border-[1pt] bg-white border-none shadow-md shadow-black/5 rounded-md flex items-center justify-center text-sm md:text-lg text-center ${
+                selectedMode === null || selectedMode === GameMode.MULTI
+                  ? "cursor-pointer"
+                  : "cursor-not-allowed opacity-50"
+              } overflow-hidden relative`}
+            >
+              <div className="w-full text-neutral-950/70 p-2 rounded-md font-black text-2xl sm:text-3xl md:text-4xl h-full flex items-center justify-center absolute inset-0 backdrop-blur-sm sm:hover:backdrop-blur-[2px] transition-all duration-300 z-10">
+                {isGameStarting && state.gameMode === GameMode.MULTI ? (
+                  <Spinner />
+                ) : (
+                  "Multi Player"
+                )}
+              </div>
+              <span className="absolute origin-top w-full h-full scale-[1] translate-y-0 sm:scale-[1.6] xs:-translate-y-16 sm:translate-y-10 md:-translate-y-0 lg:scale-[1] lg:translate-y-0">
+                <Image
+                  src="/multiplayer.svg"
+                  alt="single player"
+                  height={1000}
+                  width={1000}
+                  className="object-cover"
+                />
+              </span>
+            </div>
+          </>
+        )}
       </div>
     </div>
+  );
+}
+
+function Spinner() {
+  return (
+    <>
+      Starting
+      <CgSpinner className="animate-spin" />
+    </>
   );
 }

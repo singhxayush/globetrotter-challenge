@@ -10,7 +10,7 @@ type SubmitOrRestartProps = {
 
 const SubmitOrRestart = ({startGame, handleEndGame}: SubmitOrRestartProps) => {
   return (
-    <div className="flex w-full items-center justify-evenly md:gap-2">
+    <div className="flex w-full items-center justify-evenly md:gap-2 mt-10 md:mt-0">
       <Button
         onClick={startGame}
         className="w-full md:w-24 h-8 text-md md:text-md bg-sky-500 shadow-md shadow-black/20 hover:bg-sky-700 hover:shadow-none rounded-none md:rounded-md"

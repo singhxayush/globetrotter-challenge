@@ -19,5 +19,14 @@ export interface MultiplayerGameSession {
 export interface LeaderboardEntry {
   userId: string;
   userDisplayName: string;
-  totalAttempted: number;
+}
+
+export interface QuizData {
+  gameId: string;
+  hostId: string;
+  hostDisplayName: string;
+  status: GameStatus;
+  startTime: number | null;
+  questions: number[];
+  totalAnswered: number;
 }
